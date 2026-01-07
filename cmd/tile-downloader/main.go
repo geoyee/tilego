@@ -31,7 +31,7 @@ func main() {
 	flag.BoolVar(&config.SkipExisting, "skip", true, "[选填] 是否跳过已存在的文件")
 	flag.BoolVar(&config.CheckMD5, "md5", false, "[选填] 是否校验文件MD5")
 	flag.Int64Var(&config.MinFileSize, "min-size", 100, "[选填] 最小文件大小@字节")
-	flag.Int64Var(&config.MaxFileSize, "max-size", 2097152, "[选填] 最大文件大小@字节") // 2*1024*1024
+	flag.Int64Var(&config.MaxFileSize, "max-size", 2097152, "[选填] 最大文件大小@字节") // 2MB
 	flag.IntVar(&config.RateLimit, "rate", 10, "[选填] 速率限制@请求/秒")
 	flag.BoolVar(&config.UseHTTP2, "http2", true, "[选填] 是否启用HTTP/2")
 	flag.BoolVar(&config.KeepAlive, "keep-alive", true, "[选填] 是否启用长连接")
