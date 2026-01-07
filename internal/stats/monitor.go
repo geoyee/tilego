@@ -97,7 +97,7 @@ func (sm *StatsMonitor) monitorStats() {
 
 			activeWorkers := atomic.LoadInt32(&sm.stats.ActiveWorkers)
 
-			log.Printf("进度: %d/%d (%.1f%%) | 速度: %.1f KB/s, %.1f 瓦片/秒 | 活跃线程: %d | 成功: %d, 失败: %d, 跳过: %d",
+			log.Printf("进度: %d/%d (%.1f%%) | 速度: %.1f KB/s, %.1f 瓦片/秒 | 活跃线程: %d | 成功: %d | 失败: %d | 跳过: %d",
 				totalProcessed, sm.stats.Total, percent, speed, countSpeed, activeWorkers,
 				currentSuccess, currentFailed, currentSkipped)
 
@@ -121,7 +121,8 @@ func (sm *StatsMonitor) PrintFinalStats() {
 	percent := float64(totalProcessed) / float64(sm.stats.Total) * 100
 
 	log.Println("========================================")
-	log.Println("下载完成！最终统计:")
+	log.Println("下载完成！最终统计")
+	log.Println("========================================")
 	log.Printf("总耗时: %s", duration.Round(time.Second))
 	log.Printf("总瓦片数: %d", sm.stats.Total)
 	log.Printf("成功下载: %d", sm.stats.Success)

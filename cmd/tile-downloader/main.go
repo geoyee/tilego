@@ -35,6 +35,8 @@ func main() {
 	flag.IntVar(&config.RateLimit, "rate", 10, "[选填] 速率限制@请求/秒")
 	flag.BoolVar(&config.UseHTTP2, "http2", true, "[选填] 是否启用HTTP/2")
 	flag.BoolVar(&config.KeepAlive, "keep-alive", true, "[选填] 是否启用长连接")
+	flag.IntVar(&config.BatchSize, "batch", 1000, "[选填] 批处理大小")
+	flag.IntVar(&config.BufferSize, "buffer", 8192, "[选填] 下载缓冲区大小")
 
 	flag.Parse()
 
@@ -60,11 +62,13 @@ func main() {
 
 	// 启动下载
 	log.Println("========================================")
-	log.Println("tilego")
+	log.Println("tilego - 高性能地图瓦片下载工具")
 	log.Println("========================================")
 	log.Printf("瓦片图源: %s", config.URLTemplate)
 	log.Printf("下载范围: %.6f,%.6f - %.6f,%.6f", config.MinLon, config.MinLat, config.MaxLon, config.MaxLat)
 	log.Printf("缩放级别: %d - %d", config.MinZoom, config.MaxZoom)
+	log.Printf("保存目录: %s", config.SaveDir)
+	log.Printf("并发线程: %d", config.Threads)
 	log.Println("========================================")
 
 	if err := downloader.Run(); err != nil {

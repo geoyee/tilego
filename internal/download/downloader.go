@@ -90,7 +90,7 @@ func (d *Downloader) Init() error {
 	log.Printf("并发线程数: %d", d.config.Threads)
 
 	// 计算文件扩展名
-	d.fileExtension = util.GetFileExtension(d.config.URLTemplate, d.config.OutputType)
+	d.fileExtension = util.GetFileExtension(d.config.URLTemplate, "")
 
 	return nil
 }
@@ -129,7 +129,7 @@ func (d *Downloader) Run() error {
 		return err
 	}
 
-	log.Printf("正在并行计算瓦片范围...")
+	log.Printf("正在计算瓦片范围...")
 	tiles, err := d.calculator.CalculateTiles(d.config.MinLon, d.config.MinLat, d.config.MaxLon, d.config.MaxLat, d.config.MinZoom, d.config.MaxZoom)
 	if err != nil {
 		return fmt.Errorf("计算瓦片失败: %v", err)

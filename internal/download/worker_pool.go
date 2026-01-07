@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	"github.com/geoyee/tilego/internal/model"
-	"github.com/geoyee/tilego/internal/util"
 )
 
 // WorkerPool 工作池
@@ -56,8 +55,13 @@ func (wp *WorkerPool) SubmitTask(task *model.DownloadTask) {
 
 // SubmitTasksInBatches 批量提交任务
 func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, downloader *Downloader, stats *model.DownloadStats) {
+	if batchSize <= 0 {
+		batchSize = 1000
+	}
+
 	batchCount := 0
 	totalTiles := len(tiles)
+	submitted := 0
 
 	for i := 0; i < totalTiles; i += batchSize {
 		end := i + batchSize
@@ -84,13 +88,14 @@ func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, do
 			}
 
 			wp.SubmitTask(task)
+			submitted++
 		}
 
 		batchCount++
 		if batchCount%10 == 0 {
-			log.Printf("已提交 %d/%d 瓦片任务", util.MinInt(i+batchSize, totalTiles), totalTiles)
+			log.Printf("已提交 %d/%d 瓦片任务", submitted, totalTiles)
 		}
 	}
 
-	log.Printf("所有任务提交完成，总计 %d 个瓦片", totalTiles)
+	log.Printf("所有任务提交完成，总计 %d 个瓦片", submitted)
 }

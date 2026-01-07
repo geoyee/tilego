@@ -49,27 +49,31 @@ go build -o tile-downloader ./cmd/tile-downloader
 
 ## 参数说明
 
-- `-url`: 瓦片 URL 模板 (必填，支持 {z}, {x}, {y}, {-y} 占位符)
-- `-min-lon`: 最小经度
-- `-min-lat`: 最小纬度
-- `-max-lon`: 最大经度
-- `-max-lat`: 最大纬度
-- `-min-zoom`: 最小缩放级别 (0-18)
-- `-max-zoom`: 最大缩放级别 (0-18)
-- `-dir`: 保存目录 (默认: ./tiles)
-- `-format`: 保存格式 (zxy/xyz/z/x/y，默认: zxy)
-- `-threads`: 并发线程数 (默认: 20)
-- `-timeout`: 超时时间(秒) (默认: 60)
-- `-retries`: 重试次数 (默认: 5)
-- `-proxy`: 代理 URL (例如: http://127.0.0.1:7890)
-- `-user-agent`: User-Agent
-- `-skip`: 跳过已存在的文件 (默认: true)
-- `-md5`: 计算文件 MD5 (默认: false)
-- `-min-size`: 最小文件大小(字节) (默认: 100)
-- `-max-size`: 最大文件大小(字节) (默认: 2097152)
-- `-rate`: 速率限制(请求/秒) (默认: 10)
-- `-http2`: 启用 HTTP/2 (默认: true)
-- `-keep-alive`: 启用 Keep-Alive (默认: true)
+| 参数名 | 描述 | 默认值 | 必填 |
+|--------|------|--------|------|
+| `-url` | 瓦片 URL 模板 (支持 {z}, {x}, {y}, {-y} 占位符) | - | 是 |
+| `-min-lon` | 最小经度 | - | 是 |
+| `-min-lat` | 最小纬度 | - | 是 |
+| `-max-lon` | 最大经度 | - | 是 |
+| `-max-lat` | 最大纬度 | - | 是 |
+| `-min-zoom` | 最小缩放级别 (0-18) | 0 | 否 |
+| `-max-zoom` | 最大缩放级别 (0-18) | 18 | 否 |
+| `-dir` | 保存目录 | ./tiles | 否 |
+| `-format` | 保存格式 (zxy/xyz/z/x/y) | zxy | 否 |
+| `-threads` | 并发线程数 | 10 | 否 |
+| `-timeout` | 超时时间(秒) | 60 | 否 |
+| `-retries` | 重试次数 | 5 | 否 |
+| `-proxy` | 代理 URL (例如: http://127.0.0.1:7890) | - | 否 |
+| `-user-agent` | User-Agent | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 | 否 |
+| `-skip` | 跳过已存在的文件 | true | 否 |
+| `-md5` | 计算文件 MD5 | false | 否 |
+| `-min-size` | 最小文件大小(字节) | 100 | 否 |
+| `-max-size` | 最大文件大小(字节) | 2097152 | 否 |
+| `-rate` | 速率限制(请求/秒) | 10 | 否 |
+| `-http2` | 启用 HTTP/2 | true | 否 |
+| `-keep-alive` | 启用 Keep-Alive | true | 否 |
+| `-batch` | 批处理大小 | 1000 | 否 |
+| `-buffer` | 下载缓冲区大小 | 8192 | 否 |
 
 ## 项目结构
 

@@ -17,7 +17,33 @@ func NewTileCalculator() *TileCalculator {
 
 // CalculateTiles 计算范围内的所有瓦片
 func (tc *TileCalculator) CalculateTiles(minLon, minLat, maxLon, maxLat float64, minZoom, maxZoom int) ([]model.Tile, error) {
-	var tiles []model.Tile
+	// 预计算总瓦片数，避免频繁扩容
+	var totalTiles int
+	for zoom := minZoom; zoom <= maxZoom; zoom++ {
+		minX, minY := tc.Deg2Num(minLon, maxLat, zoom)
+		maxX, maxY := tc.Deg2Num(maxLon, minLat, zoom)
+
+		// 边界修正
+		if minX < 0 {
+			minX = 0
+		}
+		if minY < 0 {
+			minY = 0
+		}
+
+		maxTile := 1 << zoom
+		if maxX >= maxTile {
+			maxX = maxTile - 1
+		}
+		if maxY >= maxTile {
+			maxY = maxTile - 1
+		}
+
+		totalTiles += (maxX - minX + 1) * (maxY - minY + 1)
+	}
+
+	// 初始化切片，避免频繁扩容
+	tiles := make([]model.Tile, 0, totalTiles)
 
 	for zoom := minZoom; zoom <= maxZoom; zoom++ {
 		minX, minY := tc.Deg2Num(minLon, maxLat, zoom)

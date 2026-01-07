@@ -16,13 +16,13 @@ import (
 
 const (
 	// MaxIdleConns 最大空闲连接数
-	MaxIdleConns = 200
+	MaxIdleConns = 500
 	// MaxIdleConnsPerHost 每个主机的最大空闲连接数
-	MaxIdleConnsPerHost = 50
+	MaxIdleConnsPerHost = 100
 	// MaxConnsPerHost 每个主机的最大连接数
-	MaxConnsPerHost = 50
+	MaxConnsPerHost = 100
 	// IdleConnTimeout 空闲连接超时时间
-	IdleConnTimeout = 30 * time.Second
+	IdleConnTimeout = 60 * time.Second
 )
 
 // HTTPClient HTTP客户端封装
