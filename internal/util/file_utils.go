@@ -59,7 +59,7 @@ func ValidateFileFormat(data []byte, minFileSize, maxFileSize int64) bool {
 		return false
 	}
 
-	return int64(len(data)) > minFileSize && int64(len(data)) < maxFileSize
+    return int64(len(data)) >= minFileSize && int64(len(data)) <= maxFileSize
 }
 
 // GetTileURL 获取瓦片URL
