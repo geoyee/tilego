@@ -62,7 +62,7 @@ func main() {
 
 	// 启动下载
 	log.Println("========================================")
-	log.Println("tilego - 高性能地图瓦片下载工具")
+	log.Println("tilego - 地图瓦片下载工具")
 	log.Println("========================================")
 	log.Printf("瓦片图源: %s", config.URLTemplate)
 	log.Printf("下载范围: %.6f,%.6f - %.6f,%.6f", config.MinLon, config.MinLat, config.MaxLon, config.MaxLat)
