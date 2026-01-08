@@ -74,6 +74,7 @@ go build -o tile-downloader ./cmd/tile-downloader
 | `-keep-alive` | 启用 Keep-Alive                                 | true                                                         | 否   |
 | `-batch`      | 批处理大小                                      | 1000                                                         | 否   |
 | `-buffer`     | 下载缓冲区大小                                  | 8192                                                         | 否   |
+| `-resume`     | 断点续传文件名                                  | .tilego-resume.json                                          | 否   |
 
 ## 项目结构
 

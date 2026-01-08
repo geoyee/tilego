@@ -37,6 +37,7 @@ func main() {
 	flag.BoolVar(&config.KeepAlive, "keep-alive", true, "[选填] 是否启用长连接")
 	flag.IntVar(&config.BatchSize, "batch", 1000, "[选填] 批处理大小")
 	flag.IntVar(&config.BufferSize, "buffer", 8192, "[选填] 下载缓冲区大小")
+	flag.StringVar(&config.ResumeFile, "resume", ".tilego-resume.json", "[选填] 断点续传文件名")
 
 	flag.Parse()
 
