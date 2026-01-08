@@ -101,17 +101,32 @@ func (rm *ResumeManager) SaveResumeData(urlTemplate, format string, totalTiles i
 
 // IsTileDownloaded 检查瓦片是否已下载
 func (rm *ResumeManager) IsTileDownloaded(tile model.Tile) (bool, *model.TileInfo) {
+	rm.mu.RLock()
+
 	if rm.resumeData == nil {
+		rm.mu.RUnlock()
 		return false, nil
 	}
 
 	key := util.GenerateTileKey(tile.Z, tile.X, tile.Y)
-	if info, ok := rm.resumeData.Completed[key]; ok {
-		if stat, err := os.Stat(info.FilePath); err == nil && stat.Size() == info.FileSize {
-			return true, &info
-		}
-		delete(rm.resumeData.Completed, key)
+	info, ok := rm.resumeData.Completed[key]
+	rm.mu.RUnlock()
+
+	if !ok {
+		return false, nil
 	}
+
+	// 检查文件是否存在且大小匹配
+	stat, err := os.Stat(info.FilePath)
+	if err == nil && stat.Size() == info.FileSize {
+		return true, &info
+	}
+
+	// 文件检查失败，删除记录
+	rm.mu.Lock()
+	delete(rm.resumeData.Completed, key)
+	rm.mu.Unlock()
+
 	return false, nil
 }
 
