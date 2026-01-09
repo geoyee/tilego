@@ -89,35 +89,13 @@ func containsErrorContent(data []byte) bool {
 }
 
 func GetTileURL(urlTemplate string, x, y, z int) string {
-	var builder strings.Builder
-	builder.Grow(len(urlTemplate) + 30)
-
-	parts := []struct {
-		placeholder string
-		value       int
-	}{
-		{"{x}", x},
-		{"{y}", y},
-		{"{z}", z},
-		{"{-y}", (1 << z) - y - 1},
-	}
-
-	lastIndex := 0
-	for _, part := range parts {
-		for {
-			idx := strings.Index(urlTemplate[lastIndex:], part.placeholder)
-			if idx == -1 {
-				break
-			}
-			actualIdx := lastIndex + idx
-			builder.WriteString(urlTemplate[lastIndex:actualIdx])
-			builder.WriteString(strconv.Itoa(part.value))
-			lastIndex = actualIdx + len(part.placeholder)
-		}
-	}
-	builder.WriteString(urlTemplate[lastIndex:])
-
-	return builder.String()
+	replacer := strings.NewReplacer(
+		"{z}", strconv.Itoa(z),
+		"{x}", strconv.Itoa(x),
+		"{y}", strconv.Itoa(y),
+		"{-y}", strconv.Itoa((1<<z)-y-1),
+	)
+	return replacer.Replace(urlTemplate)
 }
 
 func GetSavePath(saveDir, format string, x, y, z int, ext string) (string, error) {

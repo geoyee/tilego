@@ -51,13 +51,13 @@ func createHTTPClient(config *Config) *http.Client {
 			Timeout:   DialTimeout,
 			KeepAlive: KeepAliveDuration,
 		}).DialContext,
-		ForceAttemptHTTP2:     config.UseHTTP2,
-		MaxIdleConns:          MaxIdleConns,
-		MaxIdleConnsPerHost:   MaxIdleConnsPerHost,
-		MaxConnsPerHost:       MaxConnsPerHost,
-		IdleConnTimeout:       IdleConnTimeout,
-		TLSHandshakeTimeout:   TLSHandshakeTimeout,
-		DisableCompression:    true,
+		ForceAttemptHTTP2:   config.UseHTTP2,
+		MaxIdleConns:        MaxIdleConns,
+		MaxIdleConnsPerHost: MaxIdleConnsPerHost,
+		MaxConnsPerHost:     MaxConnsPerHost,
+		IdleConnTimeout:     IdleConnTimeout,
+		TLSHandshakeTimeout: TLSHandshakeTimeout,
+		DisableCompression:  true,
 	}
 
 	if config.ProxyURL != "" {
