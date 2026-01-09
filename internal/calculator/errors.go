@@ -1,15 +1,25 @@
-// Package calculator 提供瓦片坐标计算功能
+// Package calculator provides tile coordinate calculation functionality.
+//
+// This package handles the conversion between geographic coordinates (latitude/longitude)
+// and tile coordinates (x, y, z) for map tile downloads.
 package calculator
 
 import "errors"
 
+// Error definitions for tile coordinate calculations.
 var (
-	// ErrInvalidZoomRange 无效的缩放级别范围
-	ErrInvalidZoomRange = errors.New("缩放级别无效 (0 <= min-zoom <= max-zoom <= 18)")
-	// ErrInvalidLonRange 无效的经度范围
-	ErrInvalidLonRange = errors.New("经度范围无效 (-180 <= min-lon < max-lon <= 180)")
-	// ErrInvalidLatRange 无效的纬度范围
-	ErrInvalidLatRange = errors.New("纬度范围无效 (-90 <= min-lat < max-lat <= 90)")
-	// ErrNoTilesFound 没有找到范围内的瓦片
-	ErrNoTilesFound = errors.New("没有找到范围内的瓦片")
+	// ErrInvalidZoomRange indicates that the zoom level range is invalid.
+	// Valid range is 0 <= minZoom <= maxZoom <= 18.
+	ErrInvalidZoomRange = errors.New("invalid zoom level range (0 <= min-zoom <= max-zoom <= 18)")
+
+	// ErrInvalidLonRange indicates that the longitude range is invalid.
+	// Valid range is -180 <= min-lon < max-lon <= 180.
+	ErrInvalidLonRange = errors.New("invalid longitude range (-180 <= min-lon < max-lon <= 180)")
+
+	// ErrInvalidLatRange indicates that the latitude range is invalid.
+	// Valid range is -90 <= min-lat < max-lat <= 90.
+	ErrInvalidLatRange = errors.New("invalid latitude range (-90 <= min-lat < max-lat <= 90)")
+
+	// ErrNoTilesFound indicates that no tiles were found within the specified range.
+	ErrNoTilesFound = errors.New("no tiles found in the specified range")
 )
