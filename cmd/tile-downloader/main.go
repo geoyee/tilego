@@ -20,7 +20,7 @@ func main() {
 	flag.IntVar(&config.MinZoom, "min-zoom", 0, "[Optional] Minimum zoom level")
 	flag.IntVar(&config.MaxZoom, "max-zoom", 18, "[Optional] Maximum zoom level")
 	flag.StringVar(&config.SaveDir, "dir", "./tiles", "[Optional] Save directory")
-	flag.StringVar(&config.Format, "format", "zxy", "[Optional] Save format (可选 [xyz][z/x/y])")
+flag.StringVar(&config.Format, "format", "zxy", "[Optional] Save format (e.g., zxy, xyz, z/x/y)")
 	flag.IntVar(&config.Threads, "threads", 10, "[Optional] Number of concurrent threads")
 	flag.IntVar(&config.Timeout, "timeout", 60, "[Optional] Timeout in seconds")
 	flag.IntVar(&config.Retries, "retries", 5, "[Optional] Number of retries")
