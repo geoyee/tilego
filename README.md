@@ -71,7 +71,7 @@ go build -o tile-downloader ./cmd/tile-downloader
 | `-threads`    | 并发线程数                                      | 10                                                           | 否   |
 | `-timeout`    | 超时时间(秒)                                    | 60                                                           | 否   |
 | `-retries`    | 重试次数                                        | 5                                                            | 否   |
-| `-proxy`      | 代理 URL (例如: http://127.0.0.1:7890)          | -                                                            | 否   |
+| `-proxy`      | 代理 URL (例如: <http://127.0.0.1:7890>)        | -                                                            | 否   |
 | `-user-agent` | User-Agent                                      | Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 | 否   |
 | `-skip`       | 跳过已存在的文件                                | true                                                         | 否   |
 | `-md5`        | 计算文件 MD5                                    | false                                                        | 否   |
@@ -83,6 +83,7 @@ go build -o tile-downloader ./cmd/tile-downloader
 | `-batch`      | 批处理大小                                      | 1000                                                         | 否   |
 | `-buffer`     | 下载缓冲区大小                                  | 8192                                                         | 否   |
 | `-resume`     | 断点续传文件名                                  | .tilego-resume.json                                          | 否   |
+| `-resume`     | Referer 请求头                                  | -                                                            | 否   |
 
 ## 项目结构
 

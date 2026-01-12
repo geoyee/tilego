@@ -257,7 +257,10 @@ func (d *Downloader) doDownload(task *model.DownloadTask) error {
 	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
 	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Referer", "https://example.com/")
+
+	if d.config.Referer != "" {
+		req.Header.Set("Referer", d.config.Referer)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(d.config.Timeout)*time.Second)
 	defer cancel()

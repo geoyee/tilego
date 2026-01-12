@@ -36,6 +36,7 @@ func main() {
 	flag.IntVar(&config.BatchSize, "batch", 1000, "[Optional] Batch processing size")
 	flag.IntVar(&config.BufferSize, "buffer", 8192, "[Optional] Download buffer size")
 	flag.StringVar(&config.ResumeFile, "resume", ".tilego-resume.json", "[Optional] Resume file name")
+	flag.StringVar(&config.Referer, "referer", "", "[Optional] Set Referer header for HTTP requests")
 
 	flag.Parse()
 

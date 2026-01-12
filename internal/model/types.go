@@ -76,6 +76,7 @@ type Config struct {
 	Timeout      int
 	Retries      int
 	UserAgent    string
+	Referer      string
 	OutputType   string
 	ProxyURL     string
 	ResumeFile   string
