@@ -1,4 +1,3 @@
-// Package main 瓦片下载器主程序
 package main
 
 import (
@@ -13,68 +12,65 @@ import (
 func main() {
 	config := &model.Config{}
 
-	// 命令行参数解析
-	flag.StringVar(&config.URLTemplate, "url", "", "[必填] 图源URL模板 (如 https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x})")
-	flag.Float64Var(&config.MinLon, "min-lon", math.NaN(), "[必填] 最小经度 (如 -180.0)")
-	flag.Float64Var(&config.MinLat, "min-lat", math.NaN(), "[必填] 最小纬度 (如 -90.0)")
-	flag.Float64Var(&config.MaxLon, "max-lon", math.NaN(), "[必填] 最大经度 (如 180.0)")
-	flag.Float64Var(&config.MaxLat, "max-lat", math.NaN(), "[必填] 最大纬度 (如 90.0)")
-	flag.IntVar(&config.MinZoom, "min-zoom", 0, "[选填] 最小缩放级别")
-	flag.IntVar(&config.MaxZoom, "max-zoom", 18, "[选填] 最大缩放级别")
-	flag.StringVar(&config.SaveDir, "dir", "./tiles", "[选填] 保存目录")
-	flag.StringVar(&config.Format, "format", "zxy", "[选填] 保存格式 (可选 [xyz][z/x/y])")
-	flag.IntVar(&config.Threads, "threads", 10, "[选填] 并发线程数")
-	flag.IntVar(&config.Timeout, "timeout", 60, "[选填] 超时时间@秒")
-	flag.IntVar(&config.Retries, "retries", 5, "[选填] 重试次数")
-	flag.StringVar(&config.ProxyURL, "proxy", "", "[选填] 代理URL (如 http://127.0.0.1:7890)")
-	flag.StringVar(&config.UserAgent, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "[选填] 用户代理")
-	flag.BoolVar(&config.SkipExisting, "skip", true, "[选填] 是否跳过已存在的文件")
-	flag.BoolVar(&config.CheckMD5, "md5", false, "[选填] 是否校验文件MD5")
-	flag.Int64Var(&config.MinFileSize, "min-size", 100, "[选填] 最小文件大小@字节")
-	flag.Int64Var(&config.MaxFileSize, "max-size", 2097152, "[选填] 最大文件大小@字节") // 2MB
-	flag.IntVar(&config.RateLimit, "rate", 10, "[选填] 速率限制@请求/秒")
-	flag.BoolVar(&config.UseHTTP2, "http2", true, "[选填] 是否启用HTTP/2")
-	flag.BoolVar(&config.KeepAlive, "keep-alive", true, "[选填] 是否启用长连接")
-	flag.IntVar(&config.BatchSize, "batch", 1000, "[选填] 批处理大小")
-	flag.IntVar(&config.BufferSize, "buffer", 8192, "[选填] 下载缓冲区大小")
-	flag.StringVar(&config.ResumeFile, "resume", ".tilego-resume.json", "[选填] 断点续传文件名")
+	flag.StringVar(&config.URLTemplate, "url", "", "[Required] Tile URL template (e.g., https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x})")
+	flag.Float64Var(&config.MinLon, "min-lon", math.NaN(), "[Required] Minimum longitude (e.g., -180.0)")
+	flag.Float64Var(&config.MinLat, "min-lat", math.NaN(), "[Required] Minimum latitude (e.g., -90.0)")
+	flag.Float64Var(&config.MaxLon, "max-lon", math.NaN(), "[Required] Maximum longitude (e.g., 180.0)")
+	flag.Float64Var(&config.MaxLat, "max-lat", math.NaN(), "[Required] Maximum latitude (e.g., 90.0)")
+	flag.IntVar(&config.MinZoom, "min-zoom", 0, "[Optional] Minimum zoom level")
+	flag.IntVar(&config.MaxZoom, "max-zoom", 18, "[Optional] Maximum zoom level")
+	flag.StringVar(&config.SaveDir, "dir", "./tiles", "[Optional] Save directory")
+	flag.StringVar(&config.Format, "format", "zxy", "[Optional] Save format (e.g., zxy, xyz, z/x/y)")
+	flag.IntVar(&config.Threads, "threads", 10, "[Optional] Number of concurrent threads")
+	flag.IntVar(&config.Timeout, "timeout", 60, "[Optional] Timeout in seconds")
+	flag.IntVar(&config.Retries, "retries", 5, "[Optional] Number of retries")
+	flag.StringVar(&config.ProxyURL, "proxy", "", "[Optional] Proxy URL (e.g., http://127.0.0.1:7890)")
+	flag.StringVar(&config.UserAgent, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "[Optional] User agent")
+	flag.BoolVar(&config.SkipExisting, "skip", true, "[Optional] Skip existing files")
+	flag.BoolVar(&config.CheckMD5, "md5", false, "[Optional] Verify file MD5")
+	flag.Int64Var(&config.MinFileSize, "min-size", 100, "[Optional] Minimum file size in bytes")
+	flag.Int64Var(&config.MaxFileSize, "max-size", 2097152, "[Optional] Maximum file size in bytes")
+	flag.IntVar(&config.RateLimit, "rate", 10, "[Optional] Rate limit in requests/second")
+	flag.BoolVar(&config.UseHTTP2, "http2", true, "[Optional] Enable HTTP/2")
+	flag.BoolVar(&config.KeepAlive, "keep-alive", true, "[Optional] Enable persistent connections")
+	flag.IntVar(&config.BatchSize, "batch", 1000, "[Optional] Batch processing size")
+	flag.IntVar(&config.BufferSize, "buffer", 8192, "[Optional] Download buffer size")
+	flag.StringVar(&config.ResumeFile, "resume", ".tilego-resume.json", "[Optional] Resume file name")
+	flag.StringVar(&config.Referer, "referer", "", "[Optional] Set Referer header for HTTP requests")
 
 	flag.Parse()
 
-	// 校验必填参数
 	if config.URLTemplate == "" {
-		log.Fatal("错误: 必须指定 -url 参数")
+		log.Fatal("Error: -url parameter is required")
 	}
 	if math.IsNaN(config.MinLon) {
-		log.Fatal("错误: 必须指定 -min-lon 参数")
+		log.Fatal("Error: -min-lon parameter is required")
 	}
 	if math.IsNaN(config.MaxLon) {
-		log.Fatal("错误: 必须指定 -max-lon 参数")
+		log.Fatal("Error: -max-lon parameter is required")
 	}
 	if math.IsNaN(config.MinLat) {
-		log.Fatal("错误: 必须指定 -min-lat 参数")
+		log.Fatal("Error: -min-lat parameter is required")
 	}
 	if math.IsNaN(config.MaxLat) {
-		log.Fatal("错误: 必须指定 -max-lat 参数")
+		log.Fatal("Error: -max-lat parameter is required")
 	}
 
-	// 创建下载器
 	downloader := download.NewDownloader(config)
 
-	// 启动下载
 	log.Println("========================================")
-	log.Println("tilego - 地图瓦片下载工具")
+	log.Println("tilego - Map Tile Downloader")
 	log.Println("========================================")
-	log.Printf("瓦片图源: %s", config.URLTemplate)
-	log.Printf("下载范围: %.6f,%.6f - %.6f,%.6f", config.MinLon, config.MinLat, config.MaxLon, config.MaxLat)
-	log.Printf("缩放级别: %d - %d", config.MinZoom, config.MaxZoom)
-	log.Printf("保存目录: %s", config.SaveDir)
-	log.Printf("并发线程: %d", config.Threads)
+	log.Printf("Tile source: %s", config.URLTemplate)
+	log.Printf("Download range: %.6f,%.6f - %.6f,%.6f", config.MinLon, config.MinLat, config.MaxLon, config.MaxLat)
+	log.Printf("Zoom levels: %d - %d", config.MinZoom, config.MaxZoom)
+	log.Printf("Save directory: %s", config.SaveDir)
+	log.Printf("Concurrent threads: %d", config.Threads)
 	log.Println("========================================")
 
 	if err := downloader.Run(); err != nil {
-		log.Fatalf("下载失败: %v", err)
+		log.Fatalf("Download failed: %v", err)
 	}
 
-	log.Println("下载任务全部完成")
+	log.Println("Download task completed successfully")
 }

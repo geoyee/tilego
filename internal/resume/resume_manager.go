@@ -1,4 +1,4 @@
-// Package resume 提供断点续传功能
+// Package resume provides resume/continuation functionality for downloads.
 package resume
 
 import (
@@ -14,7 +14,6 @@ import (
 	"github.com/geoyee/tilego/internal/util"
 )
 
-// ResumeManager 断点续传管理器
 type ResumeManager struct {
 	resumeData *model.ResumeData
 	resumeFile string
@@ -22,7 +21,6 @@ type ResumeManager struct {
 	mu         sync.RWMutex
 }
 
-// NewResumeManager 创建断点续传管理器
 func NewResumeManager(saveDir, resumeFile string) *ResumeManager {
 	return &ResumeManager{
 		resumeFile: resumeFile,
@@ -30,7 +28,6 @@ func NewResumeManager(saveDir, resumeFile string) *ResumeManager {
 	}
 }
 
-// LoadResumeData 加载断点续传数据
 func (rm *ResumeManager) LoadResumeData() error {
 	if rm.resumeFile == "" {
 		rm.resumeData = &model.ResumeData{
@@ -55,22 +52,21 @@ func (rm *ResumeManager) LoadResumeData() error {
 
 	data, err := os.ReadFile(resumePath)
 	if err != nil {
-		return fmt.Errorf("读取断点文件失败: %v", err)
+		return fmt.Errorf("failed to read resume file: %w", err)
 	}
 
 	var resumeData model.ResumeData
 	if err := json.Unmarshal(data, &resumeData); err != nil {
-		return fmt.Errorf("解析断点文件失败: %v", err)
+		return fmt.Errorf("failed to parse resume file: %w", err)
 	}
 
 	rm.resumeData = &resumeData
-	log.Printf("加载断点数据成功: 已完成 %d 个瓦片, 失败 %d 个瓦片",
+	log.Printf("Resume data loaded: %d tiles completed, %d tiles failed",
 		len(resumeData.Completed), len(resumeData.Failed))
 
 	return nil
 }
 
-// SaveResumeData 保存断点续传数据
 func (rm *ResumeManager) SaveResumeData(urlTemplate, format string, totalTiles int) error {
 	if rm.resumeData == nil || rm.resumeFile == "" {
 		return nil
@@ -89,17 +85,16 @@ func (rm *ResumeManager) SaveResumeData(urlTemplate, format string, totalTiles i
 	resumePath := filepath.Join(rm.saveDir, rm.resumeFile)
 	data, err := json.MarshalIndent(rm.resumeData, "", "  ")
 	if err != nil {
-		return fmt.Errorf("序列化断点数据失败: %v", err)
+		return fmt.Errorf("failed to serialize resume data: %w", err)
 	}
 
 	if err := os.WriteFile(resumePath, data, 0644); err != nil {
-		return fmt.Errorf("写入断点文件失败: %v", err)
+		return fmt.Errorf("failed to write resume file: %w", err)
 	}
 
 	return nil
 }
 
-// IsTileDownloaded 检查瓦片是否已下载
 func (rm *ResumeManager) IsTileDownloaded(tile model.Tile) (bool, *model.TileInfo) {
 	rm.mu.RLock()
 
@@ -116,13 +111,11 @@ func (rm *ResumeManager) IsTileDownloaded(tile model.Tile) (bool, *model.TileInf
 		return false, nil
 	}
 
-	// 检查文件是否存在且大小匹配
 	stat, err := os.Stat(info.FilePath)
 	if err == nil && stat.Size() == info.FileSize {
 		return true, &info
 	}
 
-	// 文件检查失败，删除记录
 	rm.mu.Lock()
 	delete(rm.resumeData.Completed, key)
 	rm.mu.Unlock()
@@ -130,7 +123,6 @@ func (rm *ResumeManager) IsTileDownloaded(tile model.Tile) (bool, *model.TileInf
 	return false, nil
 }
 
-// MarkTileComplete 标记瓦片下载完成
 func (rm *ResumeManager) MarkTileComplete(tile model.Tile, filePath string, fileSize int64, md5Hash string) {
 	if rm.resumeData == nil {
 		return
@@ -154,7 +146,6 @@ func (rm *ResumeManager) MarkTileComplete(tile model.Tile, filePath string, file
 	delete(rm.resumeData.Failed, key)
 }
 
-// MarkTileFailed 标记瓦片下载失败
 func (rm *ResumeManager) MarkTileFailed(tile model.Tile, reason string) {
 	if rm.resumeData == nil {
 		return
@@ -167,7 +158,6 @@ func (rm *ResumeManager) MarkTileFailed(tile model.Tile, reason string) {
 	rm.resumeData.Failed[key] = reason
 }
 
-// GetResumeData 获取断点续传数据
 func (rm *ResumeManager) GetResumeData() *model.ResumeData {
 	return rm.resumeData
 }

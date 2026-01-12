@@ -1,4 +1,4 @@
-// Package download 提供下载相关功能
+// Package download provides tile download functionality.
 package download
 
 import (
@@ -9,7 +9,6 @@ import (
 	"github.com/geoyee/tilego/internal/model"
 )
 
-// WorkerPool 工作池
 type WorkerPool struct {
 	workers    int
 	taskQueue  chan *model.DownloadTask
@@ -17,7 +16,6 @@ type WorkerPool struct {
 	downloader *Downloader
 }
 
-// NewWorkerPool 创建工作池
 func NewWorkerPool(workers int, downloader *Downloader) *WorkerPool {
 	return &WorkerPool{
 		workers:    workers,
@@ -27,7 +25,6 @@ func NewWorkerPool(workers int, downloader *Downloader) *WorkerPool {
 	}
 }
 
-// Start 启动工作池
 func (wp *WorkerPool) Start(stats *model.DownloadStats) {
 	wp.wg.Add(wp.workers)
 	for i := 0; i < wp.workers; i++ {
@@ -42,18 +39,15 @@ func (wp *WorkerPool) Start(stats *model.DownloadStats) {
 	}
 }
 
-// Stop 停止工作池
 func (wp *WorkerPool) Stop() {
 	close(wp.taskQueue)
 	wp.wg.Wait()
 }
 
-// SubmitTask 提交任务
 func (wp *WorkerPool) SubmitTask(task *model.DownloadTask) {
 	wp.taskQueue <- task
 }
 
-// SubmitTasksInBatches 批量提交任务
 func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, downloader *Downloader, stats *model.DownloadStats) {
 	if batchSize <= 0 {
 		batchSize = 1000
@@ -74,7 +68,7 @@ func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, do
 			url := downloader.GetTileURL(tile)
 			savePath, err := downloader.GetSavePath(tile)
 			if err != nil {
-				log.Printf("生成保存路径失败: %v", err)
+				log.Printf("Failed to generate save path: %v", err)
 				atomic.AddInt64(&stats.Failed, 1)
 				continue
 			}
@@ -93,9 +87,9 @@ func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, do
 
 		batchCount++
 		if batchCount%10 == 0 {
-			log.Printf("已提交 %d/%d 瓦片任务", submitted, totalTiles)
+			log.Printf("Submitted %d/%d tile tasks", submitted, totalTiles)
 		}
 	}
 
-	log.Printf("所有任务提交完成，总计 %d 个瓦片", submitted)
+	log.Printf("All tasks submitted. Total tiles: %d", submitted)
 }

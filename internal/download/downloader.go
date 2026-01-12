@@ -1,4 +1,4 @@
-// Package download 提供下载相关功能
+// Package download provides tile download functionality.
 package download
 
 import (
@@ -25,7 +25,6 @@ import (
 	"github.com/geoyee/tilego/internal/util"
 )
 
-// Downloader 瓦片下载器
 type Downloader struct {
 	config        *model.Config
 	httpClient    *client.HTTPClient
@@ -38,7 +37,6 @@ type Downloader struct {
 	fileExtension string
 }
 
-// NewDownloader 创建下载器实例
 func NewDownloader(config *model.Config) *Downloader {
 	return &Downloader{
 		config:     config,
@@ -46,9 +44,7 @@ func NewDownloader(config *model.Config) *Downloader {
 	}
 }
 
-// Init 初始化下载器
 func (d *Downloader) Init() error {
-	// 初始化HTTP客户端
 	httpConfig := &client.Config{
 		Timeout:   d.config.Timeout,
 		ProxyURL:  d.config.ProxyURL,
@@ -58,44 +54,36 @@ func (d *Downloader) Init() error {
 	}
 	d.httpClient = client.NewHTTPClient(httpConfig)
 
-	// 测试代理连接
 	if d.config.ProxyURL != "" {
 		if err := d.httpClient.TestProxyConnection(); err != nil {
-			log.Printf("警告: 代理连接测试失败: %v", err)
+			log.Printf("Warning: Proxy connection test failed: %v", err)
 		} else {
-			log.Printf("代理连接测试成功")
+			log.Println("Proxy connection test successful")
 		}
 	}
 
-	// 初始化速率限制器
 	if d.config.RateLimit > 0 {
 		d.limiter = rate.NewLimiter(rate.Limit(d.config.RateLimit), d.config.RateLimit)
-		log.Printf("速率限制: %d 请求/秒", d.config.RateLimit)
+		log.Printf("Rate limit: %d requests/second", d.config.RateLimit)
 	}
 
-	// 初始化计算器
 	d.calculator = calculator.NewTileCalculator()
 
-	// 初始化断点续传管理器
 	d.resumeManager = resume.NewResumeManager(d.config.SaveDir, d.config.ResumeFile)
 	if err := d.resumeManager.LoadResumeData(); err != nil {
-		return fmt.Errorf("加载断点数据失败: %v", err)
+		return fmt.Errorf("failed to load resume data: %w", err)
 	}
 
-	// 初始化统计监控器
 	d.statsMonitor = stats.NewStatsMonitor()
 
-	// 初始化工作池
 	d.workerPool = NewWorkerPool(d.config.Threads, d)
-	log.Printf("并发线程数: %d", d.config.Threads)
+	log.Printf("Concurrent threads: %d", d.config.Threads)
 
-	// 计算文件扩展名
 	d.fileExtension = util.GetFileExtension(d.config.URLTemplate, "")
 
 	return nil
 }
 
-// Cleanup 清理资源
 func (d *Downloader) Cleanup() {
 	if d.httpClient != nil {
 		if transport, ok := d.httpClient.GetClient().Transport.(*http.Transport); ok {
@@ -105,22 +93,20 @@ func (d *Downloader) Cleanup() {
 
 	if d.statsMonitor != nil && d.statsMonitor.GetStats().Total > 0 {
 		if err := d.resumeManager.SaveResumeData(d.config.URLTemplate, d.config.Format, int(d.statsMonitor.GetStats().Total)); err != nil {
-			log.Printf("清理时保存断点数据失败: %v", err)
+			log.Printf("Failed to save resume data during cleanup: %v", err)
 		}
 	}
 
 	d.printErrorStats()
 }
 
-// Run 运行下载任务
 func (d *Downloader) Run() error {
 	defer d.Cleanup()
 
 	if err := d.Init(); err != nil {
-		return fmt.Errorf("初始化失败: %v", err)
+		return fmt.Errorf("initialization failed: %w", err)
 	}
 
-	// 验证参数
 	if err := d.calculator.ValidateZoomRange(d.config.MinZoom, d.config.MaxZoom); err != nil {
 		return err
 	}
@@ -129,10 +115,10 @@ func (d *Downloader) Run() error {
 		return err
 	}
 
-	log.Printf("正在计算瓦片范围...")
+	log.Println("Calculating tile range...")
 	tiles, err := d.calculator.CalculateTiles(d.config.MinLon, d.config.MinLat, d.config.MaxLon, d.config.MaxLat, d.config.MinZoom, d.config.MaxZoom)
 	if err != nil {
-		return fmt.Errorf("计算瓦片失败: %v", err)
+		return fmt.Errorf("failed to calculate tiles: %w", err)
 	}
 
 	if len(tiles) == 0 {
@@ -140,20 +126,20 @@ func (d *Downloader) Run() error {
 	}
 
 	if err := util.EnsureDirExists(d.config.SaveDir); err != nil {
-		return fmt.Errorf("创建保存目录失败: %v", err)
+		return fmt.Errorf("failed to create save directory: %w", err)
 	}
 
 	d.statsMonitor.InitStats(len(tiles))
 
-	log.Printf("开始下载 %d 个瓦片", len(tiles))
-	log.Printf("保存目录: %s", d.config.SaveDir)
-	log.Printf("保存格式: %s", d.config.Format)
+	log.Printf("Starting download of %d tiles", len(tiles))
+	log.Printf("Save directory: %s", d.config.SaveDir)
+	log.Printf("Save format: %s", d.config.Format)
 	log.Printf("HTTP/2: %v, Keep-Alive: %v", d.config.UseHTTP2, d.config.KeepAlive)
 	if d.config.ProxyURL != "" {
-		log.Printf("使用代理: %s", d.config.ProxyURL)
+		log.Printf("Using proxy: %s", d.config.ProxyURL)
 	}
 	if d.config.RateLimit > 0 {
-		log.Printf("速率限制: %d 请求/秒", d.config.RateLimit)
+		log.Printf("Rate limit: %d requests/second", d.config.RateLimit)
 	}
 
 	d.statsMonitor.StartMonitoring()
@@ -171,27 +157,24 @@ func (d *Downloader) Run() error {
 	d.statsMonitor.PrintFinalStats()
 
 	if d.statsMonitor.GetStats().Failed > 0 {
-		return fmt.Errorf("有 %d 个瓦片下载失败", d.statsMonitor.GetStats().Failed)
+		return fmt.Errorf("%d tiles failed to download", d.statsMonitor.GetStats().Failed)
 	}
 
 	return nil
 }
 
-// GetTileURL 获取瓦片URL
 func (d *Downloader) GetTileURL(tile model.Tile) string {
 	return util.GetTileURL(d.config.URLTemplate, tile.X, tile.Y, tile.Z)
 }
 
-// GetSavePath 获取保存路径
 func (d *Downloader) GetSavePath(tile model.Tile) (string, error) {
 	return util.GetSavePath(d.config.SaveDir, d.config.Format, tile.X, tile.Y, tile.Z, d.fileExtension)
 }
 
-// DownloadTask 下载单个任务
 func (d *Downloader) DownloadTask(task *model.DownloadTask, stats *model.DownloadStats) {
 	if d.limiter != nil {
 		if err := d.limiter.Wait(context.Background()); err != nil {
-			log.Printf("速率限制错误: %v", err)
+			log.Printf("Rate limit error: %v", err)
 			return
 		}
 	}
@@ -232,17 +215,11 @@ func (d *Downloader) DownloadTask(task *model.DownloadTask, stats *model.Downloa
 		d.errorStats.RecordError(err)
 
 		errStr := err.Error()
-		if strings.Contains(errStr, "404") ||
-			strings.Contains(errStr, "403") ||
-			strings.Contains(errStr, "401") ||
-			strings.Contains(errStr, "400") {
+		if isClientError(errStr) {
 			break
 		}
 
-		if strings.Contains(errStr, "timeout") ||
-			strings.Contains(errStr, "deadline") ||
-			strings.Contains(errStr, "connection") ||
-			strings.Contains(errStr, "network") {
+		if isNetworkError(errStr) {
 			continue
 		}
 	}
@@ -251,23 +228,39 @@ func (d *Downloader) DownloadTask(task *model.DownloadTask, stats *model.Downloa
 	d.resumeManager.MarkTileFailed(task.Tile, lastErr.Error())
 
 	if atomic.LoadInt64(&stats.Failed)%10 == 0 {
-		log.Printf("累计失败数: %d", atomic.LoadInt64(&stats.Failed))
+		log.Printf("Total failed: %d", atomic.LoadInt64(&stats.Failed))
 	}
 }
 
-// doDownload 执行下载
+func isClientError(errStr string) bool {
+	return strings.Contains(errStr, "404") ||
+		strings.Contains(errStr, "403") ||
+		strings.Contains(errStr, "401") ||
+		strings.Contains(errStr, "400")
+}
+
+func isNetworkError(errStr string) bool {
+	return strings.Contains(errStr, "timeout") ||
+		strings.Contains(errStr, "deadline") ||
+		strings.Contains(errStr, "connection") ||
+		strings.Contains(errStr, "network")
+}
+
 func (d *Downloader) doDownload(task *model.DownloadTask) error {
 	req, err := http.NewRequest("GET", task.URL, nil)
 	if err != nil {
-		return fmt.Errorf("创建请求失败: %v", err)
+		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("User-Agent", d.config.UserAgent)
 	req.Header.Set("Accept", "image/webp,image/apng,image/*,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
 	req.Header.Set("Accept-Encoding", "gzip, deflate")
 	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Referer", "https://example.com/")
+
+	if d.config.Referer != "" {
+		req.Header.Set("Referer", d.config.Referer)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(d.config.Timeout)*time.Second)
 	defer cancel()
@@ -294,7 +287,7 @@ func (d *Downloader) doDownload(task *model.DownloadTask) error {
 			totalRead += int64(n)
 
 			if totalRead > d.config.MaxFileSize {
-				return fmt.Errorf("文件大小超过限制: %d > %d", totalRead, d.config.MaxFileSize)
+				return fmt.Errorf("file size exceeds limit: %d > %d", totalRead, d.config.MaxFileSize)
 			}
 		}
 
@@ -302,7 +295,7 @@ func (d *Downloader) doDownload(task *model.DownloadTask) error {
 			if readErr == io.EOF {
 				break
 			}
-			return fmt.Errorf("读取响应失败: %v", readErr)
+			return fmt.Errorf("failed to read response: %w", readErr)
 		}
 
 		select {
@@ -313,19 +306,19 @@ func (d *Downloader) doDownload(task *model.DownloadTask) error {
 	}
 
 	if int64(len(data)) < d.config.MinFileSize {
-		return fmt.Errorf("文件太小: %d < %d", len(data), d.config.MinFileSize)
+		return fmt.Errorf("file too small: %d < %d", len(data), d.config.MinFileSize)
 	}
 
 	if !util.ValidateFileFormat(data, d.config.MinFileSize, d.config.MaxFileSize) {
-		return fmt.Errorf("无效的文件格式")
+		return fmt.Errorf("invalid file format")
 	}
 
 	if err := util.EnsureDirExists(filepath.Dir(task.SavePath)); err != nil {
-		return fmt.Errorf("创建目录失败: %v", err)
+		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	if err := os.WriteFile(task.SavePath, data, 0644); err != nil {
-		return fmt.Errorf("保存文件失败: %v", err)
+		return fmt.Errorf("failed to save file: %w", err)
 	}
 
 	var md5Hash string
@@ -339,14 +332,13 @@ func (d *Downloader) doDownload(task *model.DownloadTask) error {
 	return nil
 }
 
-// printErrorStats 打印错误统计
 func (d *Downloader) printErrorStats() {
 	if !d.errorStats.HasErrors() {
 		return
 	}
 
-	log.Println("错误统计:")
+	log.Println("Error statistics:")
 	for err, count := range d.errorStats.GetErrorStats() {
-		log.Printf("  %s: %d次", err, count)
+		log.Printf("  %s: %d occurrences", err, count)
 	}
 }
