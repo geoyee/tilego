@@ -26,6 +26,7 @@ func main() {
 	flag.IntVar(&config.Retries, "retries", 5, "[Optional] Number of retries")
 	flag.StringVar(&config.ProxyURL, "proxy", "", "[Optional] Proxy URL (e.g., http://127.0.0.1:7890)")
 	flag.StringVar(&config.UserAgent, "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "[Optional] User agent")
+	flag.StringVar(&config.Referer, "referer", "", "[Optional] Set Referer header for HTTP requests")
 	flag.BoolVar(&config.SkipExisting, "skip", true, "[Optional] Skip existing files")
 	flag.BoolVar(&config.CheckMD5, "md5", false, "[Optional] Verify file MD5")
 	flag.Int64Var(&config.MinFileSize, "min-size", 100, "[Optional] Minimum file size in bytes")
@@ -36,7 +37,6 @@ func main() {
 	flag.IntVar(&config.BatchSize, "batch", 1000, "[Optional] Batch processing size")
 	flag.IntVar(&config.BufferSize, "buffer", 8192, "[Optional] Download buffer size")
 	flag.StringVar(&config.ResumeFile, "resume", ".tilego-resume.json", "[Optional] Resume file name")
-	flag.StringVar(&config.Referer, "referer", "", "[Optional] Set Referer header for HTTP requests")
 
 	flag.Parse()
 
