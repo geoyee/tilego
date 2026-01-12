@@ -83,7 +83,7 @@ go build -o tile-downloader ./cmd/tile-downloader
 | `-batch`      | 批处理大小                                      | 1000                                                         | 否   |
 | `-buffer`     | 下载缓冲区大小                                  | 8192                                                         | 否   |
 | `-resume`     | 断点续传文件名                                  | .tilego-resume.json                                          | 否   |
-| `-resume`     | Referer 请求头                                  | -                                                            | 否   |
+| `-referer`    | Referer 请求头                                  | -                                                            | 否   |
 
 ## 项目结构
 
