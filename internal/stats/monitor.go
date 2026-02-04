@@ -1,4 +1,3 @@
-// Package stats provides download statistics and monitoring functionality.
 package stats
 
 import (
@@ -12,7 +11,6 @@ import (
 
 type StatsMonitor struct {
 	stats      *model.DownloadStats
-	mu         sync.RWMutex
 	stopChan   chan bool
 	speedMutex sync.RWMutex
 }
@@ -37,14 +35,14 @@ func (sm *StatsMonitor) GetStats() *model.DownloadStats {
 }
 
 func (sm *StatsMonitor) StartMonitoring() {
-	go sm.monitorStats()
+	go sm.MonitorStats()
 }
 
 func (sm *StatsMonitor) StopMonitoring() {
 	close(sm.stopChan)
 }
 
-func (sm *StatsMonitor) monitorStats() {
+func (sm *StatsMonitor) MonitorStats() {
 	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
@@ -57,12 +55,10 @@ func (sm *StatsMonitor) monitorStats() {
 		case <-ticker.C:
 			now := time.Now()
 			duration := now.Sub(lastTime).Seconds()
-
 			currentSuccess := atomic.LoadInt64(&sm.stats.Success)
 			currentBytes := atomic.LoadInt64(&sm.stats.BytesTotal)
 			currentFailed := atomic.LoadInt64(&sm.stats.Failed)
 			currentSkipped := atomic.LoadInt64(&sm.stats.Skipped)
-
 			successDiff := currentSuccess - lastSuccess
 			bytesDiff := currentBytes - lastBytes
 
@@ -87,7 +83,6 @@ func (sm *StatsMonitor) monitorStats() {
 
 			totalProcessed := currentSuccess + currentSkipped
 			percent := float64(totalProcessed) / float64(sm.stats.Total) * 100
-
 			activeWorkers := atomic.LoadInt32(&sm.stats.ActiveWorkers)
 
 			log.Printf("Progress: %d/%d (%.1f%%) | Speed: %.1f KB/s, %.1f tiles/sec | Active threads: %d | Success: %d | Failed: %d | Skipped: %d",

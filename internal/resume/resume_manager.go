@@ -1,4 +1,3 @@
-// Package resume provides resume/continuation functionality for downloads.
 package resume
 
 import (

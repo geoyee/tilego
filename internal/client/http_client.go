@@ -1,4 +1,3 @@
-// Package client provides HTTP client functionality for tile downloads.
 package client
 
 import (
@@ -40,11 +39,11 @@ type Config struct {
 func NewHTTPClient(config *Config) *HTTPClient {
 	return &HTTPClient{
 		config: config,
-		client: createHTTPClient(config),
+		client: CreateHTTPClient(config),
 	}
 }
 
-func createHTTPClient(config *Config) *http.Client {
+func CreateHTTPClient(config *Config) *http.Client {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{

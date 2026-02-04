@@ -1,14 +1,11 @@
-// Package model 定义数据模型
 package model
 
 import "time"
 
-// Tile 瓦片坐标
 type Tile struct {
 	X, Y, Z int
 }
 
-// DownloadTask 下载任务
 type DownloadTask struct {
 	Tile     Tile
 	URL      string
@@ -17,7 +14,6 @@ type DownloadTask struct {
 	Priority int
 }
 
-// DownloadStats 下载统计
 type DownloadStats struct {
 	Total         int64
 	Success       int64
@@ -30,14 +26,12 @@ type DownloadStats struct {
 	SpeedHistory  []SpeedRecord
 }
 
-// SpeedRecord 速度记录
 type SpeedRecord struct {
 	Time  time.Time
 	Speed float64
 	Count int64
 }
 
-// ResumeData 断点续传数据
 type ResumeData struct {
 	Version      string              `json:"version"`
 	URLTemplate  string              `json:"url_template"`
@@ -49,7 +43,6 @@ type ResumeData struct {
 	DownloadTime time.Time           `json:"download_time"`
 }
 
-// TileInfo 瓦片信息
 type TileInfo struct {
 	X          int       `json:"x"`
 	Y          int       `json:"y"`
@@ -61,7 +54,6 @@ type TileInfo struct {
 	Valid      bool      `json:"valid"`
 }
 
-// Config 下载器配置
 type Config struct {
 	URLTemplate  string
 	MinLon       float64

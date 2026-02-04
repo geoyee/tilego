@@ -1,4 +1,3 @@
-// Package download provides tile download functionality.
 package download
 
 import (
