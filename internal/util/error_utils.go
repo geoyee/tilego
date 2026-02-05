@@ -5,13 +5,13 @@ import (
 )
 
 type ErrorStats struct {
-	errors map[string]int
-	mu     sync.RWMutex
+	Errors map[string]int
+	Mu     sync.RWMutex
 }
 
 func NewErrorStats() *ErrorStats {
 	return &ErrorStats{
-		errors: make(map[string]int),
+		Errors: make(map[string]int),
 	}
 }
 
@@ -19,25 +19,23 @@ func (es *ErrorStats) RecordError(err error) {
 	if err == nil {
 		return
 	}
-	es.mu.Lock()
-	defer es.mu.Unlock()
-	es.errors[err.Error()]++
+	es.Mu.Lock()
+	defer es.Mu.Unlock()
+	es.Errors[err.Error()]++
 }
 
 func (es *ErrorStats) GetErrorStats() map[string]int {
-	es.mu.RLock()
-	defer es.mu.RUnlock()
+	es.Mu.RLock()
+	defer es.Mu.RUnlock()
 	stats := make(map[string]int)
-	for err, count := range es.errors {
+	for err, count := range es.Errors {
 		stats[err] = count
 	}
-
 	return stats
 }
 
 func (es *ErrorStats) HasErrors() bool {
-	es.mu.RLock()
-	defer es.mu.RUnlock()
-
-	return len(es.errors) > 0
+	es.Mu.RLock()
+	defer es.Mu.RUnlock()
+	return len(es.Errors) > 0
 }

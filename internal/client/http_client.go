@@ -24,8 +24,8 @@ const (
 )
 
 type HTTPClient struct {
-	client *http.Client
-	config *Config
+	Client *http.Client
+	Config *Config
 }
 
 type Config struct {
@@ -38,8 +38,8 @@ type Config struct {
 
 func NewHTTPClient(config *Config) *HTTPClient {
 	return &HTTPClient{
-		config: config,
-		client: CreateHTTPClient(config),
+		Config: config,
+		Client: CreateHTTPClient(config),
 	}
 }
 
@@ -58,7 +58,6 @@ func CreateHTTPClient(config *Config) *http.Client {
 		TLSHandshakeTimeout: TLSHandshakeTimeout,
 		DisableCompression:  true,
 	}
-
 	if config.ProxyURL != "" {
 		log.Printf("Configuring proxy: %s", config.ProxyURL)
 		proxyURL, err := url.Parse(config.ProxyURL)
@@ -69,20 +68,16 @@ func CreateHTTPClient(config *Config) *http.Client {
 			log.Printf("Proxy configured successfully: %s", proxyURL.Host)
 		}
 	}
-
 	if config.UseHTTP2 {
 		if err := http2.ConfigureTransport(transport); err != nil {
 			log.Printf("Failed to configure HTTP/2: %v", err)
 		}
 	}
-
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: false,
 		MinVersion:         tls.VersionTLS12,
 	}
-
 	transport.TLSClientConfig = tlsConfig
-
 	return &http.Client{
 		Transport: transport,
 		Timeout:   time.Duration(config.Timeout) * time.Second,
@@ -90,44 +85,37 @@ func CreateHTTPClient(config *Config) *http.Client {
 }
 
 func (c *HTTPClient) TestProxyConnection() error {
-	if c.config.ProxyURL == "" {
+	if c.Config.ProxyURL == "" {
 		return nil
 	}
-
-	testURL := "http://httpbin.org/ip"
-
+	testURL := "https://www.google.com/"
 	transport := &http.Transport{}
-	proxyURL, err := url.Parse(c.config.ProxyURL)
+	proxyURL, err := url.Parse(c.Config.ProxyURL)
 	if err != nil {
 		return fmt.Errorf("failed to parse proxy URL: %w", err)
 	}
 	transport.Proxy = http.ProxyURL(proxyURL)
-
 	client := &http.Client{
 		Transport: transport,
 		Timeout:   10 * time.Second,
 	}
-
 	req, err := http.NewRequest("GET", testURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-
 	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("proxy connection failed: %w", err)
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("proxy returned HTTP %d", resp.StatusCode)
 	}
-
 	return nil
 }
 
 func (c *HTTPClient) GetClient() *http.Client {
-	return c.client
+	return c.Client
 }
 
 func SafeCloseResponse(resp *http.Response) {

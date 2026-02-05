@@ -12,7 +12,7 @@ func NewTileCalculator() *TileCalculator {
 	return &TileCalculator{}
 }
 
-func (tc *TileCalculator) CalculateTiles(minLon, minLat, maxLon, maxLat float64, minZoom, maxZoom int) ([]model.Tile, error) {
+func (tc *TileCalculator) CalculateTiles(minLon, minLat, maxLon, maxLat float64, minZoom, maxZoom int) []model.Tile {
 	var totalTiles int
 	for zoom := minZoom; zoom <= maxZoom; zoom++ {
 		minX, minY := tc.Deg2Num(minLon, maxLat, zoom)
@@ -20,7 +20,6 @@ func (tc *TileCalculator) CalculateTiles(minLon, minLat, maxLon, maxLat float64,
 		minX, minY, maxX, maxY = tc.ClampTileCoords(minX, minY, maxX, maxY, zoom)
 		totalTiles += (maxX - minX + 1) * (maxY - minY + 1)
 	}
-
 	tiles := make([]model.Tile, 0, totalTiles)
 	for zoom := minZoom; zoom <= maxZoom; zoom++ {
 		minX, minY := tc.Deg2Num(minLon, maxLat, zoom)
@@ -36,8 +35,7 @@ func (tc *TileCalculator) CalculateTiles(minLon, minLat, maxLon, maxLat float64,
 			}
 		}
 	}
-
-	return tiles, nil
+	return tiles
 }
 
 func (tc *TileCalculator) ClampTileCoords(minX, minY, maxX, maxY, zoom int) (int, int, int, int) {
@@ -47,7 +45,6 @@ func (tc *TileCalculator) ClampTileCoords(minX, minY, maxX, maxY, zoom int) (int
 	if minY < 0 {
 		minY = 0
 	}
-
 	maxTile := 1 << zoom
 	if maxX >= maxTile {
 		maxX = maxTile - 1
@@ -55,7 +52,6 @@ func (tc *TileCalculator) ClampTileCoords(minX, minY, maxX, maxY, zoom int) (int
 	if maxY >= maxTile {
 		maxY = maxTile - 1
 	}
-
 	return minX, minY, maxX, maxY
 }
 
@@ -69,26 +65,17 @@ func (tc *TileCalculator) Deg2Num(lon, lat float64, zoom int) (x, y int) {
 }
 
 func (tc *TileCalculator) ValidateZoomRange(minZoom, maxZoom int) error {
-	if minZoom < 0 || maxZoom > 18 {
-		return ErrInvalidZoomRange
-	}
-	if minZoom > maxZoom {
+	if minZoom < 0 || maxZoom > 18 || minZoom > maxZoom {
 		return ErrInvalidZoomRange
 	}
 	return nil
 }
 
 func (tc *TileCalculator) ValidateLatLonRange(minLon, minLat, maxLon, maxLat float64) error {
-	if minLon < -180 || maxLon > 180 {
+	if minLon < -180 || maxLon > 180 || minLon >= maxLon {
 		return ErrInvalidLonRange
 	}
-	if minLat < -90 || maxLat > 90 {
-		return ErrInvalidLatRange
-	}
-	if minLon >= maxLon {
-		return ErrInvalidLonRange
-	}
-	if minLat >= maxLat {
+	if minLat < -90 || maxLat > 90 || minLat >= maxLat {
 		return ErrInvalidLatRange
 	}
 	return nil
