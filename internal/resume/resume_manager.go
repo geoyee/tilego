@@ -30,7 +30,7 @@ func NewResumeManager(saveDir, resumeFile string) *ResumeManager {
 func (rm *ResumeManager) LoadResumeData() error {
 	if rm.ResumeFile == "" {
 		rm.ResumeData = &model.ResumeData{
-			Version:      "2.0",
+			Version:      "1.0",
 			Completed:    make(map[string]model.TileInfo),
 			Failed:       make(map[string]string),
 			DownloadTime: time.Now(),
@@ -40,7 +40,7 @@ func (rm *ResumeManager) LoadResumeData() error {
 	resumePath := filepath.Join(rm.SaveDir, rm.ResumeFile)
 	if _, err := os.Stat(resumePath); os.IsNotExist(err) {
 		rm.ResumeData = &model.ResumeData{
-			Version:      "2.0",
+			Version:      "1.0",
 			Completed:    make(map[string]model.TileInfo),
 			Failed:       make(map[string]string),
 			DownloadTime: time.Now(),
@@ -67,7 +67,7 @@ func (rm *ResumeManager) SaveResumeData(urlTemplate, format string, totalTiles i
 	}
 	rm.Mu.Lock()
 	defer rm.Mu.Unlock()
-	rm.ResumeData.Version = "2.0"
+	rm.ResumeData.Version = "1.0"
 	rm.ResumeData.URLTemplate = urlTemplate
 	rm.ResumeData.SaveDir = rm.SaveDir
 	rm.ResumeData.Format = format

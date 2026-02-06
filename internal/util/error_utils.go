@@ -25,13 +25,7 @@ func (es *ErrorStats) RecordError(err error) {
 }
 
 func (es *ErrorStats) GetErrorStats() map[string]int {
-	es.Mu.RLock()
-	defer es.Mu.RUnlock()
-	stats := make(map[string]int)
-	for err, count := range es.Errors {
-		stats[err] = count
-	}
-	return stats
+	return es.Errors
 }
 
 func (es *ErrorStats) HasErrors() bool {

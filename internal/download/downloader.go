@@ -158,12 +158,10 @@ func (d *Downloader) DownloadTask(task *model.DownloadTask, stats *model.Downloa
 	}
 	var lastErr error
 	maxAttempts := d.Config.Retries + 1
-	for attempt := 0; attempt < maxAttempts; attempt++ {
+	for attempt := range maxAttempts {
 		if attempt > 0 {
 			delay := time.Duration(1<<uint(attempt-1)) * 500 * time.Millisecond
-			if delay > 30*time.Second {
-				delay = 30 * time.Second
-			}
+			delay = min(delay, 30*time.Second)
 			time.Sleep(delay)
 			atomic.AddInt64(&stats.Retries, 1)
 		}
@@ -201,10 +199,11 @@ func isClientError(errStr string) bool {
 }
 
 func isNetworkError(errStr string) bool {
-	return strings.Contains(errStr, "timeout") ||
-		strings.Contains(errStr, "deadline") ||
-		strings.Contains(errStr, "connection") ||
-		strings.Contains(errStr, "network")
+	lowerErr := strings.ToLower(errStr)
+	return strings.Contains(lowerErr, "timeout") ||
+		strings.Contains(lowerErr, "deadline") ||
+		strings.Contains(lowerErr, "connection") ||
+		strings.Contains(lowerErr, "network")
 }
 
 func (d *Downloader) doDownload(task *model.DownloadTask) error {

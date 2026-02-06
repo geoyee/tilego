@@ -55,11 +55,13 @@ func (tc *TileCalculator) ClampTileCoords(minX, minY, maxX, maxY, zoom int) (int
 	return minX, minY, maxX, maxY
 }
 
+/** 经纬度转为地图瓦片编号 */
 func (tc *TileCalculator) Deg2Num(lon, lat float64, zoom int) (x, y int) {
-	tileCount := 1 << zoom
+	tileCount := 1 << zoom // 2 ^ zoom
 	n := float64(tileCount)
 	x = int((lon + 180.0) / 360.0 * n)
 	latRad := lat * math.Pi / 180.0
+	// 墨卡托投影公式计算Y坐标
 	y = int((1.0 - math.Log(math.Tan(latRad)+1.0/math.Cos(latRad))/math.Pi) / 2.0 * n)
 	return x, y
 }

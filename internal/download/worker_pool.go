@@ -55,10 +55,7 @@ func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, do
 	totalTiles := len(tiles)
 	submitted := 0
 	for i := 0; i < totalTiles; i += batchSize {
-		end := i + batchSize
-		if end > totalTiles {
-			end = totalTiles
-		}
+		end := min(i+batchSize, totalTiles)
 		batch := tiles[i:end]
 		for _, tile := range batch {
 			url := downloader.GetTileURL(tile)

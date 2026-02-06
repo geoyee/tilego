@@ -43,7 +43,7 @@ func (sm *StatsMonitor) StopMonitoring() {
 }
 
 func (sm *StatsMonitor) MonitorStats() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(10 * time.Second) // 10秒一次的定时器
 	defer ticker.Stop()
 	var lastSuccess int64
 	var lastBytes int64

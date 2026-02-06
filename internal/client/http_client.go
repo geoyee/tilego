@@ -14,13 +14,13 @@ import (
 )
 
 const (
-	MaxIdleConns        = 500
-	MaxIdleConnsPerHost = 100
-	MaxConnsPerHost     = 100
-	IdleConnTimeout     = 60 * time.Second
-	DialTimeout         = 30 * time.Second
-	KeepAliveDuration   = 30 * time.Second
-	TLSHandshakeTimeout = 15 * time.Second
+	MaxIdleConns        = 500              // 全局最大空闲连接数
+	MaxIdleConnsPerHost = 100              // 单服务端最大空闲连接数
+	MaxConnsPerHost     = 100              // 单服务端最大总连接数
+	IdleConnTimeout     = 60 * time.Second // 空闲连接超时时间
+	DialTimeout         = 30 * time.Second // TCP拨号超时时间
+	KeepAliveDuration   = 30 * time.Second // TCP保活间隔
+	TLSHandshakeTimeout = 15 * time.Second // TLS握手超时时间
 )
 
 type HTTPClient struct {
@@ -88,7 +88,7 @@ func (c *HTTPClient) TestProxyConnection() error {
 	if c.Config.ProxyURL == "" {
 		return nil
 	}
-	testURL := "https://www.google.com/"
+	testURL := "https://www.google.com/" // 使用google测试代理
 	transport := &http.Transport{}
 	proxyURL, err := url.Parse(c.Config.ProxyURL)
 	if err != nil {
