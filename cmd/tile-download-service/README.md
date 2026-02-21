@@ -8,11 +8,36 @@
 # 编译服务
 go build -o tile-download-service ./cmd/tile-download-service
 
-# 运行服务（默认端口 8080）
+# 运行服务（默认端口 8765）
 ./tile-download-service
+
+# 指定端口运行
+./tile-download-service -port 9000
+
+# 指定 CORS 允许的源
+./tile-download-service -allowed-origins "http://localhost:3000,http://example.com"
+
+# 查看帮助
+./tile-download-service -h
 ```
 
-服务启动后将在 `http://localhost:8080` 提供服务。
+### 命令行参数
+
+| 参数              | 默认值 | 描述                               |
+| ----------------- | ------ | ---------------------------------- |
+| -port             | 8765   | HTTP 服务端口                      |
+| -allowed-origins  | *      | 允许的 CORS 源（多个用逗号分隔）   |
+
+### 环境变量
+
+也可以通过环境变量配置：
+
+| 环境变量         | 描述                     |
+| ---------------- | ------------------------ |
+| PORT             | HTTP 服务端口            |
+| ALLOWED_ORIGINS  | 允许的 CORS 源（逗号分隔）|
+
+服务启动后将在 `http://localhost:8765` 提供服务。
 
 ## API 接口文档
 
