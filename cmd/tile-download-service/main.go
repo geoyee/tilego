@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"math"
@@ -28,22 +29,22 @@ const (
 )
 
 type Task struct {
-	ID          string            `json:"id"`
-	Config      *model.Config     `json:"config"`
-	Status      TaskStatus        `json:"status"`
-	Progress    float64           `json:"progress"`
-	Total       int64             `json:"total"`
-	Success     int64             `json:"success"`
-	Failed      int64             `json:"failed"`
-	Skipped     int64             `json:"skipped"`
-	BytesTotal  int64             `json:"bytes_total"`
-	Speed       float64           `json:"speed"`
-	StartTime   time.Time         `json:"start_time"`
-	EndTime     time.Time         `json:"end_time,omitempty"`
-	Error       string            `json:"error,omitempty"`
-	cancelFunc  context.CancelFunc `json:"-"`
-	downloader  *download.Downloader `json:"-"`
-	mu          sync.RWMutex       `json:"-"`
+	ID         string               `json:"id"`
+	Config     *model.Config        `json:"config"`
+	Status     TaskStatus           `json:"status"`
+	Progress   float64              `json:"progress"`
+	Total      int64                `json:"total"`
+	Success    int64                `json:"success"`
+	Failed     int64                `json:"failed"`
+	Skipped    int64                `json:"skipped"`
+	BytesTotal int64                `json:"bytes_total"`
+	Speed      float64              `json:"speed"`
+	StartTime  time.Time            `json:"start_time"`
+	EndTime    time.Time            `json:"end_time,omitempty"`
+	Error      string               `json:"error,omitempty"`
+	cancelFunc context.CancelFunc   `json:"-"`
+	downloader *download.Downloader `json:"-"`
+	mu         sync.RWMutex         `json:"-"`
 }
 
 type TaskManager struct {
@@ -100,51 +101,51 @@ func (tm *TaskManager) DeleteTask(id string) bool {
 }
 
 type DownloadRequest struct {
-	ID          string  `json:"id,omitempty"`
-	URLTemplate string  `json:"url_template"`
-	MinLon      float64 `json:"min_lon"`
-	MinLat      float64 `json:"min_lat"`
-	MaxLon      float64 `json:"max_lon"`
-	MaxLat      float64 `json:"max_lat"`
-	MinZoom     int     `json:"min_zoom,omitempty"`
-	MaxZoom     int     `json:"max_zoom,omitempty"`
-	SaveDir     string  `json:"save_dir,omitempty"`
-	Format      string  `json:"format,omitempty"`
-	Threads     int     `json:"threads,omitempty"`
-	Timeout     int     `json:"timeout,omitempty"`
-	Retries     int     `json:"retries,omitempty"`
-	ProxyURL    string  `json:"proxy_url,omitempty"`
-	UserAgent   string  `json:"user_agent,omitempty"`
-	Referer     string  `json:"referer,omitempty"`
-	SkipExisting *bool  `json:"skip_existing,omitempty"`
-	CheckMD5    *bool   `json:"check_md5,omitempty"`
-	MinFileSize int64   `json:"min_file_size,omitempty"`
-	MaxFileSize int64   `json:"max_file_size,omitempty"`
-	RateLimit   int     `json:"rate_limit,omitempty"`
-	UseHTTP2    *bool   `json:"use_http2,omitempty"`
-	KeepAlive   *bool   `json:"keep_alive,omitempty"`
-	BatchSize   int     `json:"batch_size,omitempty"`
-	BufferSize  int     `json:"buffer_size,omitempty"`
+	ID           string  `json:"id,omitempty"`
+	URLTemplate  string  `json:"url_template"`
+	MinLon       float64 `json:"min_lon"`
+	MinLat       float64 `json:"min_lat"`
+	MaxLon       float64 `json:"max_lon"`
+	MaxLat       float64 `json:"max_lat"`
+	MinZoom      int     `json:"min_zoom,omitempty"`
+	MaxZoom      int     `json:"max_zoom,omitempty"`
+	SaveDir      string  `json:"save_dir,omitempty"`
+	Format       string  `json:"format,omitempty"`
+	Threads      int     `json:"threads,omitempty"`
+	Timeout      int     `json:"timeout,omitempty"`
+	Retries      int     `json:"retries,omitempty"`
+	ProxyURL     string  `json:"proxy_url,omitempty"`
+	UserAgent    string  `json:"user_agent,omitempty"`
+	Referer      string  `json:"referer,omitempty"`
+	SkipExisting *bool   `json:"skip_existing,omitempty"`
+	CheckMD5     *bool   `json:"check_md5,omitempty"`
+	MinFileSize  int64   `json:"min_file_size,omitempty"`
+	MaxFileSize  int64   `json:"max_file_size,omitempty"`
+	RateLimit    int     `json:"rate_limit,omitempty"`
+	UseHTTP2     *bool   `json:"use_http2,omitempty"`
+	KeepAlive    *bool   `json:"keep_alive,omitempty"`
+	BatchSize    int     `json:"batch_size,omitempty"`
+	BufferSize   int     `json:"buffer_size,omitempty"`
 }
 
 func defaultConfig() *model.Config {
 	return &model.Config{
-		MinZoom:     0,
-		MaxZoom:     18,
-		SaveDir:     "./tiles",
-		Format:      "zxy",
-		Threads:     10,
-		Timeout:     60,
-		Retries:     5,
-		UserAgent:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-		MinFileSize: 100,
-		MaxFileSize: 2097152,
-		RateLimit:   10,
-		BatchSize:   1000,
-		BufferSize:  8192,
+		MinZoom:      0,
+		MaxZoom:      18,
+		SaveDir:      "./tiles",
+		Format:       "zxy",
+		Threads:      10,
+		Timeout:      60,
+		Retries:      5,
+		UserAgent:    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		MinFileSize:  100,
+		MaxFileSize:  2097152,
+		RateLimit:    10,
+		BatchSize:    1000,
+		BufferSize:   8192,
 		SkipExisting: true,
-		UseHTTP2:    true,
-		KeepAlive:   true,
+		UseHTTP2:     true,
+		KeepAlive:    true,
 	}
 }
 
@@ -222,8 +223,8 @@ type APIResponse struct {
 }
 
 type Server struct {
-	taskManager  *TaskManager
-	port         int
+	taskManager    *TaskManager
+	port           int
 	allowedOrigins []string
 }
 
@@ -614,25 +615,37 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := 8080
-	if portStr := os.Getenv("PORT"); portStr != "" {
-		if p, err := fmt.Sscanf(portStr, "%d", &port); err != nil || p != 1 {
-			log.Printf("Invalid PORT environment variable, using default: %d", port)
+	port := flag.Int("port", 8765, "HTTP service port")
+	allowedOriginsStr := flag.String("allowed-origins", "*", "Allowed CORS origins (comma-separated)")
+	flag.Parse()
+
+	allowedOrigins := []string{"*"}
+	if *allowedOriginsStr != "" && *allowedOriginsStr != "*" {
+		allowedOrigins = strings.Split(*allowedOriginsStr, ",")
+		for i, origin := range allowedOrigins {
+			allowedOrigins[i] = strings.TrimSpace(origin)
 		}
 	}
 
-	allowedOrigins := []string{"*"}
-	if originsStr := os.Getenv("ALLOWED_ORIGINS"); originsStr != "" {
-		allowedOrigins = strings.Split(originsStr, ",")
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		var p int
+		if _, err := fmt.Sscanf(envPort, "%d", &p); err == nil {
+			*port = p
+		}
+	}
+
+	if envOrigins := os.Getenv("ALLOWED_ORIGINS"); envOrigins != "" {
+		allowedOrigins = strings.Split(envOrigins, ",")
 		for i, origin := range allowedOrigins {
 			allowedOrigins[i] = strings.TrimSpace(origin)
 		}
 	}
 
 	log.Printf("Starting Tile Download Service...")
+	log.Printf("Port: %d", *port)
 	log.Printf("Allowed CORS origins: %v", allowedOrigins)
 
-	server := NewServer(port, allowedOrigins)
+	server := NewServer(*port, allowedOrigins)
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
