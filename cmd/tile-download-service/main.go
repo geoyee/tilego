@@ -7,6 +7,8 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -17,11 +19,12 @@ import (
 type TaskStatus string
 
 const (
-	StatusPending  TaskStatus = "pending"
-	StatusRunning  TaskStatus = "running"
-	StatusStopped  TaskStatus = "stopped"
-	StatusComplete TaskStatus = "complete"
-	StatusFailed   TaskStatus = "failed"
+	StatusPending         TaskStatus = "pending"
+	StatusRunning         TaskStatus = "running"
+	StatusStopped         TaskStatus = "stopped"
+	StatusComplete        TaskStatus = "complete"
+	StatusCompletePartial TaskStatus = "complete_partial"
+	StatusFailed          TaskStatus = "failed"
 )
 
 type Task struct {
@@ -98,11 +101,11 @@ func (tm *TaskManager) DeleteTask(id string) bool {
 
 type DownloadRequest struct {
 	ID          string  `json:"id,omitempty"`
-	URLTemplate string  `json:"url_template" binding:"required"`
-	MinLon      float64 `json:"min_lon" binding:"required"`
-	MinLat      float64 `json:"min_lat" binding:"required"`
-	MaxLon      float64 `json:"max_lon" binding:"required"`
-	MaxLat      float64 `json:"max_lat" binding:"required"`
+	URLTemplate string  `json:"url_template"`
+	MinLon      float64 `json:"min_lon"`
+	MinLat      float64 `json:"min_lat"`
+	MaxLon      float64 `json:"max_lon"`
+	MaxLat      float64 `json:"max_lat"`
 	MinZoom     int     `json:"min_zoom,omitempty"`
 	MaxZoom     int     `json:"max_zoom,omitempty"`
 	SaveDir     string  `json:"save_dir,omitempty"`
@@ -124,71 +127,79 @@ type DownloadRequest struct {
 	BufferSize  int     `json:"buffer_size,omitempty"`
 }
 
+func defaultConfig() *model.Config {
+	return &model.Config{
+		MinZoom:     0,
+		MaxZoom:     18,
+		SaveDir:     "./tiles",
+		Format:      "zxy",
+		Threads:     10,
+		Timeout:     60,
+		Retries:     5,
+		UserAgent:   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+		MinFileSize: 100,
+		MaxFileSize: 2097152,
+		RateLimit:   10,
+		BatchSize:   1000,
+		BufferSize:  8192,
+	}
+}
+
 func (r *DownloadRequest) ToConfig() *model.Config {
-	config := &model.Config{
-		URLTemplate:  r.URLTemplate,
-		MinLon:       r.MinLon,
-		MinLat:       r.MinLat,
-		MaxLon:       r.MaxLon,
-		MaxLat:       r.MaxLat,
-		MinZoom:      r.MinZoom,
-		MaxZoom:      r.MaxZoom,
-		SaveDir:      r.SaveDir,
-		Format:       r.Format,
-		Threads:      r.Threads,
-		Timeout:      r.Timeout,
-		Retries:      r.Retries,
-		ProxyURL:     r.ProxyURL,
-		UserAgent:    r.UserAgent,
-		Referer:      r.Referer,
-		SkipExisting: r.SkipExisting,
-		CheckMD5:     r.CheckMD5,
-		MinFileSize:  r.MinFileSize,
-		MaxFileSize:  r.MaxFileSize,
-		RateLimit:    r.RateLimit,
-		UseHTTP2:     r.UseHTTP2,
-		KeepAlive:    r.KeepAlive,
-		BatchSize:    r.BatchSize,
-		BufferSize:   r.BufferSize,
+	config := defaultConfig()
+	config.URLTemplate = r.URLTemplate
+	config.MinLon = r.MinLon
+	config.MinLat = r.MinLat
+	config.MaxLon = r.MaxLon
+	config.MaxLat = r.MaxLat
+	if r.MinZoom != 0 {
+		config.MinZoom = r.MinZoom
 	}
-	if config.MinZoom == 0 {
-		config.MinZoom = 0
+	if r.MaxZoom != 0 {
+		config.MaxZoom = r.MaxZoom
 	}
-	if config.MaxZoom == 0 {
-		config.MaxZoom = 18
+	if r.SaveDir != "" {
+		config.SaveDir = r.SaveDir
 	}
-	if config.SaveDir == "" {
-		config.SaveDir = "./tiles"
+	if r.Format != "" {
+		config.Format = r.Format
 	}
-	if config.Format == "" {
-		config.Format = "zxy"
+	if r.Threads != 0 {
+		config.Threads = r.Threads
 	}
-	if config.Threads == 0 {
-		config.Threads = 10
+	if r.Timeout != 0 {
+		config.Timeout = r.Timeout
 	}
-	if config.Timeout == 0 {
-		config.Timeout = 60
+	if r.Retries != 0 {
+		config.Retries = r.Retries
 	}
-	if config.Retries == 0 {
-		config.Retries = 5
+	if r.ProxyURL != "" {
+		config.ProxyURL = r.ProxyURL
 	}
-	if config.UserAgent == "" {
-		config.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+	if r.UserAgent != "" {
+		config.UserAgent = r.UserAgent
 	}
-	if config.MinFileSize == 0 {
-		config.MinFileSize = 100
+	if r.Referer != "" {
+		config.Referer = r.Referer
 	}
-	if config.MaxFileSize == 0 {
-		config.MaxFileSize = 2097152
+	config.SkipExisting = r.SkipExisting
+	config.CheckMD5 = r.CheckMD5
+	if r.MinFileSize != 0 {
+		config.MinFileSize = r.MinFileSize
 	}
-	if config.RateLimit == 0 {
-		config.RateLimit = 10
+	if r.MaxFileSize != 0 {
+		config.MaxFileSize = r.MaxFileSize
 	}
-	if config.BatchSize == 0 {
-		config.BatchSize = 1000
+	if r.RateLimit != 0 {
+		config.RateLimit = r.RateLimit
 	}
-	if config.BufferSize == 0 {
-		config.BufferSize = 8192
+	config.UseHTTP2 = r.UseHTTP2
+	config.KeepAlive = r.KeepAlive
+	if r.BatchSize != 0 {
+		config.BatchSize = r.BatchSize
+	}
+	if r.BufferSize != 0 {
+		config.BufferSize = r.BufferSize
 	}
 	return config
 }
@@ -200,14 +211,19 @@ type APIResponse struct {
 }
 
 type Server struct {
-	taskManager *TaskManager
-	port        int
+	taskManager  *TaskManager
+	port         int
+	allowedOrigins []string
 }
 
-func NewServer(port int) *Server {
+func NewServer(port int, allowedOrigins []string) *Server {
+	if len(allowedOrigins) == 0 {
+		allowedOrigins = []string{"*"}
+	}
 	return &Server{
-		taskManager: NewTaskManager(),
-		port:        port,
+		taskManager:    NewTaskManager(),
+		port:           port,
+		allowedOrigins: allowedOrigins,
 	}
 }
 
@@ -235,7 +251,22 @@ func (s *Server) Start() error {
 
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		allowed := false
+		for _, allowedOrigin := range s.allowedOrigins {
+			if allowedOrigin == "*" || allowedOrigin == origin {
+				allowed = true
+				if allowedOrigin == "*" {
+					w.Header().Set("Access-Control-Allow-Origin", "*")
+				} else {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+				}
+				break
+			}
+		}
+		if !allowed && len(s.allowedOrigins) > 0 {
+			w.Header().Set("Access-Control-Allow-Origin", s.allowedOrigins[0])
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == "OPTIONS" {
@@ -321,8 +352,10 @@ func (s *Server) runDownloadTask(task *Task) {
 		task.mu.Lock()
 		task.EndTime = time.Now()
 		if task.Status == StatusRunning {
-			if task.Failed > 0 && task.Success == 0 {
+			if task.Success == 0 && task.Failed > 0 {
 				task.Status = StatusFailed
+			} else if task.Failed > 0 {
+				task.Status = StatusCompletePartial
 			} else {
 				task.Status = StatusComplete
 			}
@@ -402,8 +435,8 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taskID := r.URL.Path[len("/api/status/"):]
-	if taskID == "" {
+	taskID := strings.TrimPrefix(r.URL.Path, "/api/status/")
+	if taskID == "" || taskID == r.URL.Path {
 		s.respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
 			Message: "Task ID is required",
@@ -457,8 +490,8 @@ func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taskID := r.URL.Path[len("/api/stop/"):]
-	if taskID == "" {
+	taskID := strings.TrimPrefix(r.URL.Path, "/api/stop/")
+	if taskID == "" || taskID == r.URL.Path {
 		s.respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
 			Message: "Task ID is required",
@@ -547,8 +580,8 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taskID := r.URL.Path[len("/api/delete/"):]
-	if taskID == "" {
+	taskID := strings.TrimPrefix(r.URL.Path, "/api/delete/")
+	if taskID == "" || taskID == r.URL.Path {
 		s.respondJSON(w, http.StatusBadRequest, APIResponse{
 			Success: false,
 			Message: "Task ID is required",
@@ -571,9 +604,24 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	port := 8080
+	if portStr := os.Getenv("PORT"); portStr != "" {
+		if p, err := fmt.Sscanf(portStr, "%d", &port); err != nil || p != 1 {
+			log.Printf("Invalid PORT environment variable, using default: %d", port)
+		}
+	}
+
+	allowedOrigins := []string{"*"}
+	if originsStr := os.Getenv("ALLOWED_ORIGINS"); originsStr != "" {
+		allowedOrigins = strings.Split(originsStr, ",")
+		for i, origin := range allowedOrigins {
+			allowedOrigins[i] = strings.TrimSpace(origin)
+		}
+	}
+
 	log.Printf("Starting Tile Download Service...")
-	
-	server := NewServer(port)
+	log.Printf("Allowed CORS origins: %v", allowedOrigins)
+
+	server := NewServer(port, allowedOrigins)
 	if err := server.Start(); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
