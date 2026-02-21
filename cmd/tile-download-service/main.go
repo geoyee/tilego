@@ -116,13 +116,13 @@ type DownloadRequest struct {
 	ProxyURL    string  `json:"proxy_url,omitempty"`
 	UserAgent   string  `json:"user_agent,omitempty"`
 	Referer     string  `json:"referer,omitempty"`
-	SkipExisting bool   `json:"skip_existing,omitempty"`
-	CheckMD5    bool    `json:"check_md5,omitempty"`
+	SkipExisting *bool  `json:"skip_existing,omitempty"`
+	CheckMD5    *bool   `json:"check_md5,omitempty"`
 	MinFileSize int64   `json:"min_file_size,omitempty"`
 	MaxFileSize int64   `json:"max_file_size,omitempty"`
 	RateLimit   int     `json:"rate_limit,omitempty"`
-	UseHTTP2    bool    `json:"use_http2,omitempty"`
-	KeepAlive   bool    `json:"keep_alive,omitempty"`
+	UseHTTP2    *bool   `json:"use_http2,omitempty"`
+	KeepAlive   *bool   `json:"keep_alive,omitempty"`
 	BatchSize   int     `json:"batch_size,omitempty"`
 	BufferSize  int     `json:"buffer_size,omitempty"`
 }
@@ -142,6 +142,9 @@ func defaultConfig() *model.Config {
 		RateLimit:   10,
 		BatchSize:   1000,
 		BufferSize:  8192,
+		SkipExisting: true,
+		UseHTTP2:    true,
+		KeepAlive:   true,
 	}
 }
 
@@ -182,8 +185,12 @@ func (r *DownloadRequest) ToConfig() *model.Config {
 	if r.Referer != "" {
 		config.Referer = r.Referer
 	}
-	config.SkipExisting = r.SkipExisting
-	config.CheckMD5 = r.CheckMD5
+	if r.SkipExisting != nil {
+		config.SkipExisting = *r.SkipExisting
+	}
+	if r.CheckMD5 != nil {
+		config.CheckMD5 = *r.CheckMD5
+	}
 	if r.MinFileSize != 0 {
 		config.MinFileSize = r.MinFileSize
 	}
@@ -193,8 +200,12 @@ func (r *DownloadRequest) ToConfig() *model.Config {
 	if r.RateLimit != 0 {
 		config.RateLimit = r.RateLimit
 	}
-	config.UseHTTP2 = r.UseHTTP2
-	config.KeepAlive = r.KeepAlive
+	if r.UseHTTP2 != nil {
+		config.UseHTTP2 = *r.UseHTTP2
+	}
+	if r.KeepAlive != nil {
+		config.KeepAlive = *r.KeepAlive
+	}
 	if r.BatchSize != 0 {
 		config.BatchSize = r.BatchSize
 	}
