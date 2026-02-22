@@ -1,0 +1,3 @@
+[submodule "cmd/tile-download-service/tilego-front"]
+	path = cmd/tile-download-service/tilego-front
+	url = https://github.com/geoyee/tilego-front.git

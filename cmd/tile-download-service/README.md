@@ -252,7 +252,7 @@ go build -o tile-download-service ./cmd/tile-download-service
 
 ```bash
 # 创建下载任务
-curl -X POST http://localhost:8080/api/download \
+curl -X POST http://localhost:8765/api/download \
   -H "Content-Type: application/json" \
   -d '{
     "url_template": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -265,16 +265,16 @@ curl -X POST http://localhost:8080/api/download \
   }'
 
 # 查询任务状态
-curl http://localhost:8080/api/status/task_001
+curl http://localhost:8765/api/status/task_001
 
 # 停止任务
-curl -X POST http://localhost:8080/api/stop/task_001
+curl -X POST http://localhost:8765/api/stop/task_001
 
 # 获取任务列表
-curl http://localhost:8080/api/tasks
+curl http://localhost:8765/api/tasks
 
 # 删除任务
-curl -X DELETE http://localhost:8080/api/delete/task_001
+curl -X DELETE http://localhost:8765/api/delete/task_001
 ```
 
 ### JavaScript 示例
@@ -282,7 +282,7 @@ curl -X DELETE http://localhost:8080/api/delete/task_001
 ```javascript
 // 创建下载任务
 async function createTask() {
-  const response = await fetch("http://localhost:8080/api/download", {
+  const response = await fetch("http://localhost:8765/api/download", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -300,7 +300,11 @@ async function createTask() {
 
 // 查询任务状态
 async function getTaskStatus(taskId) {
-  const response = await fetch(`http://localhost:8080/api/status/${taskId}`);
+  const response = await fetch(`http://localhost:8765/api/status/${taskId}`);
   return await response.json();
 }
 ```
+
+## 拓展
+
+可以结合前端界面 [tilego-front](./tilego-front) 提供可视化的瓦片下载管理功能。更多前端详情请参阅 [tilego-front/README.md](./tilego-front/README.md)。
