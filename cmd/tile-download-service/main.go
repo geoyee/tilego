@@ -307,6 +307,7 @@ func (s *Server) stopRunningTask(task *Task) {
 			select {
 			case <-doneChan:
 			case <-time.After(taskStopTimeout):
+				log.Printf("Warning: Task %s did not stop gracefully within %v", task.ID, taskStopTimeout)
 			}
 		}
 	} else {
