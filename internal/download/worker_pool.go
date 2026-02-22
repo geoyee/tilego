@@ -34,9 +34,6 @@ func (wp *WorkerPool) Start(stats *model.DownloadStats) {
 		go func() {
 			defer wp.Wg.Done()
 			for task := range wp.TaskQueue {
-				if wp.stopped.Load() {
-					return
-				}
 				atomic.AddInt32(&stats.ActiveWorkers, 1)
 				wp.Downloader.DownloadTask(task, stats)
 				atomic.AddInt32(&stats.ActiveWorkers, -1)

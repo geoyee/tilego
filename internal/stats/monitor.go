@@ -95,16 +95,21 @@ func (sm *StatsMonitor) MonitorStats() {
 
 func (sm *StatsMonitor) PrintFinalStats() {
 	duration := time.Since(sm.Stats.StartTime)
-	totalProcessed := sm.Stats.Success + sm.Stats.Skipped
+	totalProcessed := sm.Stats.Success + sm.Stats.Skipped + sm.Stats.Failed
 	percent := float64(totalProcessed) / float64(sm.Stats.Total) * 100
 	log.Println("========================================")
-	log.Println("Download Complete! Final Statistics")
+	if totalProcessed >= sm.Stats.Total {
+		log.Println("Download Complete! Final Statistics")
+	} else {
+		log.Println("Download Incomplete! Final Statistics")
+	}
 	log.Println("========================================")
 	log.Printf("Total time: %s", duration.Round(time.Second))
 	log.Printf("Total tiles: %d", sm.Stats.Total)
 	log.Printf("Successfully downloaded: %d", sm.Stats.Success)
 	log.Printf("Skipped (existing): %d", sm.Stats.Skipped)
 	log.Printf("Failed: %d", sm.Stats.Failed)
+	log.Printf("Not processed: %d", sm.Stats.Total-totalProcessed)
 	log.Printf("Retry count: %d", sm.Stats.Retries)
 	log.Printf("Total downloaded: %.2f MB", float64(sm.Stats.BytesTotal)/1024/1024)
 	log.Printf("Completion: %.1f%%", percent)

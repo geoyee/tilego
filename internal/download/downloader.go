@@ -149,11 +149,17 @@ func (d *Downloader) GetSavePath(tile model.Tile) (string, error) {
 }
 
 func (d *Downloader) DownloadTask(task *model.DownloadTask, stats *model.DownloadStats) {
+	if d.stopped.Load() {
+		return
+	}
 	if d.Limiter != nil {
 		if err := d.Limiter.Wait(context.Background()); err != nil {
 			log.Printf("Rate limit error: %v", err)
 			return
 		}
+	}
+	if d.stopped.Load() {
+		return
 	}
 	if d.Config.SkipExisting {
 		if downloaded, info := d.ResumeManager.IsTileDownloaded(task.Tile); downloaded {
