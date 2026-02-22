@@ -34,6 +34,7 @@ type Downloader struct {
 	WorkerPool    *WorkerPool
 	Limiter       *rate.Limiter
 	FileExtension string
+	stopped       atomic.Bool
 }
 
 func NewDownloader(config *model.Config) *Downloader {
@@ -87,6 +88,13 @@ func (d *Downloader) Cleanup() {
 		}
 	}
 	d.printErrorStats()
+}
+
+func (d *Downloader) Stop() {
+	d.stopped.Store(true)
+	if d.WorkerPool != nil {
+		d.WorkerPool.Stop()
+	}
 }
 
 func (d *Downloader) Run() error {
