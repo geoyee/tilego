@@ -26,6 +26,7 @@ const (
 	StatusComplete        TaskStatus = "complete"
 	StatusCompletePartial TaskStatus = "complete_partial"
 	StatusFailed          TaskStatus = "failed"
+	taskStopTimeout                  = 10 * time.Second
 )
 
 type Task struct {
@@ -45,6 +46,7 @@ type Task struct {
 	cancelFunc context.CancelFunc   `json:"-"`
 	downloader *download.Downloader `json:"-"`
 	mu         sync.RWMutex         `json:"-"`
+	done       chan struct{}        `json:"-"`
 }
 
 type TaskManager struct {
@@ -295,6 +297,24 @@ func (s *Server) respondJSON(w http.ResponseWriter, statusCode int, data interfa
 	json.NewEncoder(w).Encode(data)
 }
 
+func (s *Server) stopRunningTask(task *Task) {
+	task.mu.Lock()
+	if task.Status == StatusRunning && task.cancelFunc != nil {
+		task.cancelFunc()
+		doneChan := task.done
+		task.mu.Unlock()
+		if doneChan != nil {
+			select {
+			case <-doneChan:
+			case <-time.After(taskStopTimeout):
+				log.Printf("Warning: Task %s did not stop gracefully within %v", task.ID, taskStopTimeout)
+			}
+		}
+	} else {
+		task.mu.Unlock()
+	}
+}
+
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	s.respondJSON(w, http.StatusOK, APIResponse{
 		Success: true,
@@ -358,6 +378,7 @@ func (s *Server) runDownloadTask(task *Task) {
 	task.Status = StatusRunning
 	task.StartTime = time.Now()
 	task.cancelFunc = cancel
+	task.done = make(chan struct{})
 	task.mu.Unlock()
 
 	defer func() {
@@ -372,6 +393,7 @@ func (s *Server) runDownloadTask(task *Task) {
 				task.Status = StatusComplete
 			}
 		}
+		close(task.done)
 		task.mu.Unlock()
 	}()
 
@@ -425,7 +447,7 @@ func (s *Server) runDownloadTask(task *Task) {
 
 	select {
 	case <-ctx.Done():
-		downloader.Cleanup()
+		downloader.Stop()
 		task.mu.Lock()
 		task.Status = StatusStopped
 		task.mu.Unlock()
@@ -529,12 +551,9 @@ func (s *Server) handleStop(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
-	if task.cancelFunc != nil {
-		task.cancelFunc()
-	}
-	task.Status = StatusStopped
 	task.mu.Unlock()
+
+	s.stopRunningTask(task)
 
 	s.respondJSON(w, http.StatusOK, APIResponse{
 		Success: true,
@@ -601,17 +620,22 @@ func (s *Server) handleDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.taskManager.DeleteTask(taskID) {
-		s.respondJSON(w, http.StatusOK, APIResponse{
-			Success: true,
-			Message: "Task deleted",
-		})
-	} else {
+	task, ok := s.taskManager.GetTask(taskID)
+	if !ok {
 		s.respondJSON(w, http.StatusNotFound, APIResponse{
 			Success: false,
 			Message: "Task not found",
 		})
+		return
 	}
+
+	s.stopRunningTask(task)
+	s.taskManager.DeleteTask(taskID)
+
+	s.respondJSON(w, http.StatusOK, APIResponse{
+		Success: true,
+		Message: "Task deleted",
+	})
 }
 
 func main() {

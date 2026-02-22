@@ -13,6 +13,9 @@ type WorkerPool struct {
 	TaskQueue  chan *model.DownloadTask
 	Wg         sync.WaitGroup
 	Downloader *Downloader
+	stopped    atomic.Bool
+	stopOnce   sync.Once
+	stopChan   chan struct{}
 }
 
 func NewWorkerPool(workers int, downloader *Downloader) *WorkerPool {
@@ -21,6 +24,7 @@ func NewWorkerPool(workers int, downloader *Downloader) *WorkerPool {
 		TaskQueue:  make(chan *model.DownloadTask, workers*2),
 		Wg:         sync.WaitGroup{},
 		Downloader: downloader,
+		stopChan:   make(chan struct{}),
 	}
 }
 
@@ -30,6 +34,9 @@ func (wp *WorkerPool) Start(stats *model.DownloadStats) {
 		go func() {
 			defer wp.Wg.Done()
 			for task := range wp.TaskQueue {
+				if wp.stopped.Load() {
+					return
+				}
 				atomic.AddInt32(&stats.ActiveWorkers, 1)
 				wp.Downloader.DownloadTask(task, stats)
 				atomic.AddInt32(&stats.ActiveWorkers, -1)
@@ -39,12 +46,24 @@ func (wp *WorkerPool) Start(stats *model.DownloadStats) {
 }
 
 func (wp *WorkerPool) Stop() {
-	close(wp.TaskQueue)
+	wp.stopOnce.Do(func() {
+		wp.stopped.Store(true)
+		close(wp.stopChan)
+		close(wp.TaskQueue)
+	})
 	wp.Wg.Wait()
 }
 
-func (wp *WorkerPool) SubmitTask(task *model.DownloadTask) {
-	wp.TaskQueue <- task
+func (wp *WorkerPool) SubmitTask(task *model.DownloadTask) bool {
+	if wp.stopped.Load() {
+		return false
+	}
+	select {
+	case <-wp.stopChan:
+		return false
+	case wp.TaskQueue <- task:
+		return true
+	}
 }
 
 func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, downloader *Downloader, stats *model.DownloadStats) {
@@ -55,9 +74,17 @@ func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, do
 	totalTiles := len(tiles)
 	submitted := 0
 	for i := 0; i < totalTiles; i += batchSize {
+		if wp.stopped.Load() || downloader.stopped.Load() {
+			log.Printf("Task submission stopped at %d/%d tiles", submitted, totalTiles)
+			return
+		}
 		end := min(i+batchSize, totalTiles)
 		batch := tiles[i:end]
 		for _, tile := range batch {
+			if wp.stopped.Load() || downloader.stopped.Load() {
+				log.Printf("Task submission stopped at %d/%d tiles", submitted, totalTiles)
+				return
+			}
 			url := downloader.GetTileURL(tile)
 			savePath, err := downloader.GetSavePath(tile)
 			if err != nil {
@@ -72,7 +99,10 @@ func (wp *WorkerPool) SubmitTasksInBatches(tiles []model.Tile, batchSize int, do
 				Retry:    0,
 				Priority: 0,
 			}
-			wp.SubmitTask(task)
+			if !wp.SubmitTask(task) {
+				log.Printf("Task submission stopped at %d/%d tiles", submitted, totalTiles)
+				return
+			}
 			submitted++
 		}
 		batchCount++
