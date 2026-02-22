@@ -307,4 +307,4 @@ async function getTaskStatus(taskId) {
 
 ## 拓展
 
-可以结合前端界面 [tilego-front](./tilego-front) 提供可视化的瓦片下载管理功能。更多前端详情请参阅 [tilego-front/README.md](./tilego-front/README.md)。
+可以结合前端界面 [tilego-front](https://github.com/geoyee/tilego-front) 提供可视化的瓦片下载管理功能。更多前端详情请参阅 [tilego-front/README.md](https://github.com/geoyee/tilego-front/blob/master/README.md)。
