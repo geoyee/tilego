@@ -8,11 +8,7 @@
 tilego/
 ├── cmd/
 │   ├── tile-downloader/        # 命令行下载工具
-│   │   ├── main.go
-│   │   └── README.md
 │   └── tile-download-service/  # HTTP 下载服务
-│       ├── main.go
-│       └── README.md
 ├── internal/
 │   ├── client/                 # HTTP 客户端
 │   ├── calculator/             # 瓦片坐标计算
