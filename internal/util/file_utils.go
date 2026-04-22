@@ -91,13 +91,13 @@ func GetSavePath(saveDir, format string, x, y, z int, ext string) (string, error
 	var path string
 	switch format {
 	case "zxy":
-		path = filepath.Join(saveDir, strconv.Itoa(z), strconv.Itoa(x), strconv.Itoa(y))
-	case "xyz":
-		path = filepath.Join(saveDir, strconv.Itoa(x), strconv.Itoa(y), strconv.Itoa(z))
-	case "z/x/y":
 		path = filepath.Join(saveDir, GenerateTileKey(z, x, y))
+	case "xyz":
+		path = filepath.Join(saveDir, GenerateTileKey(x, y, z))
+	case "zyx":
+		path = filepath.Join(saveDir, GenerateTileKey(z, y, x))
 	default:
-		path = filepath.Join(saveDir, strconv.Itoa(z), strconv.Itoa(x), strconv.Itoa(y))
+		path = filepath.Join(saveDir, GenerateTileKey(z, x, y))
 	}
 	if !strings.HasSuffix(path, ext) {
 		path += ext
